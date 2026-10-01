@@ -63,15 +63,17 @@ Bienvenue sur le dépôt officiel de l'application **ON CONNAÎT 🇨🇮**, la 
 
 ## 🚀 Installation & Lancement Local
 
+Copiez et collez ces commandes dans votre terminal :
+
 ```bash
-# 1. Cloner le projet
-git clone <URL_DU_DEPOT_GITHUB>
-cd on-connait-ci
+# 1. Cloner le projet depuis GitHub
+git clone https://github.com/jeandedieuulrich-ship-it/On-conna-t.-.git
+cd On-conna-t.-
 
 # 2. Installer les dépendances
 npm install
 
-# 3. Lancer le serveur de développement
+# 3. Lancer le serveur de développement en local
 npm run dev
 
 # 4. Compiler pour la production
@@ -80,19 +82,10 @@ npm run build
 
 ---
 
-## 📦 Déploiement sur GitHub
+## 🌐 Déploiement & Accès en Ligne
 
-Pour lier ce projet à votre compte GitHub :
-
-```bash
-# 1. Créez un nouveau dépôt sur GitHub (ex: on-connait-ci)
-# 2. Liez le dépôt distant :
-git remote add origin https://github.com/<VOTRE_NOM_UTILISATEUR>/on-connait-ci.git
-
-# 3. Poussez votre code :
-git branch -M main
-git push -u origin main
-```
+- **Dépôt GitHub officiel** : [https://github.com/jeandedieuulrich-ship-it/On-conna-t.-](https://github.com/jeandedieuulrich-ship-it/On-conna-t.-)
+- **Application Live (Production)** : [https://ais-pre-vf4t5spiqbt62qvvejhqc2-194091796142.europe-west2.run.app](https://ais-pre-vf4t5spiqbt62qvvejhqc2-194091796142.europe-west2.run.app)
 
 ---
 
