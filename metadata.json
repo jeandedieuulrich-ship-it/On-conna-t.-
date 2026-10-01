@@ -1,0 +1,6 @@
+{
+  "name": "ON CONNAÎT 🇨🇮 - Événements & Prestataires Côte d'Ivoire",
+  "description": "La plateforme de référence pour tous les événements, concerts, festivals et prestataires professionnels en Côte d'Ivoire.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
