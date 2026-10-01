@@ -29,37 +29,14 @@ export const Navbar: React.FC = () => {
     setIsAddEventOpen,
     setIsRegisterProviderOpen,
     setIsLegalModalOpen,
+    setIsShareModalOpen,
     events,
     providers,
     reports,
   } = useApp();
 
-  const [copiedShare, setCopiedShare] = useState(false);
-
-  const handleShareApp = async () => {
-    const shareUrl = 'https://ais-pre-vf4t5spiqbt62qvvejhqc2-194091796142.europe-west2.run.app';
-    const shareData = {
-      title: 'ON CONNAÎT 🇨🇮 - Tout ce qui se passe en Côte d\'Ivoire',
-      text: 'Découvrez tous les événements, concerts, festivals, salons et les meilleurs prestataires de Côte d\'Ivoire sur ON CONNAÎT 🇨🇮 !',
-      url: shareUrl,
-    };
-
-    if (navigator.share) {
-      try {
-        await navigator.share(shareData);
-        return;
-      } catch (err) {
-        // Fallback to clipboard
-      }
-    }
-
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setCopiedShare(true);
-      setTimeout(() => setCopiedShare(false), 3000);
-    } catch (e) {
-      // Ignored
-    }
+  const handleShareApp = () => {
+    setIsShareModalOpen(true);
   };
 
   const pendingEventsCount = events.filter((e) => e.statut === 'en_attente').length;
@@ -236,25 +213,12 @@ export const Navbar: React.FC = () => {
           <div className="flex items-center gap-2 sm:gap-3">
             {/* Share App Button */}
             <button
-              onClick={handleShareApp}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs ${
-                copiedShare
-                  ? 'bg-emerald-600 text-white shadow-emerald-500/20'
-                  : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'
-              }`}
-              title="Partager l'application"
+              onClick={() => setIsShareModalOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl transition-all cursor-pointer shadow-2xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 hover:border-emerald-400 active:scale-95"
+              title="Partager l'application ON CONNAÎT"
             >
-              {copiedShare ? (
-                <>
-                  <Check className="w-3.5 h-3.5 text-white" />
-                  <span className="hidden sm:inline">Lien copié !</span>
-                </>
-              ) : (
-                <>
-                  <Share2 className="w-3.5 h-3.5 text-emerald-700" />
-                  <span className="hidden sm:inline">Partager</span>
-                </>
-              )}
+              <Share2 className="w-3.5 h-3.5 text-emerald-700" />
+              <span className="hidden sm:inline">Partager</span>
             </button>
 
             {/* Language Switcher */}

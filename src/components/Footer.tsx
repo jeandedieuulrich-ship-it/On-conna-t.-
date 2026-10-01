@@ -8,6 +8,7 @@ import {
   MessageCircle,
   MapPin,
   Heart,
+  Share2,
 } from 'lucide-react';
 import { PAYMENT_CONFIG, CITIES_CI } from '../data/mockData';
 
@@ -19,6 +20,7 @@ export const Footer: React.FC = () => {
     setIsRegisterProviderOpen,
     setIsLegalModalOpen,
     setIsPaymentModalOpen,
+    setIsShareModalOpen,
     setSelectedCityFilter,
   } = useApp();
 
@@ -157,7 +159,15 @@ export const Footer: React.FC = () => {
             © {new Date().getFullYear()} ON CONNAÎT 🇨🇮. Tous droits réservés.
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <button
+              onClick={() => setIsShareModalOpen(true)}
+              className="flex items-center gap-1.5 text-orange-400 hover:text-orange-300 transition-colors font-bold cursor-pointer"
+            >
+              <Share2 className="w-3.5 h-3.5" />
+              <span>Partager l'application</span>
+            </button>
+
             <button
               onClick={() => setIsLegalModalOpen(true)}
               className="flex items-center gap-1 hover:text-slate-300 transition-colors underline cursor-pointer"

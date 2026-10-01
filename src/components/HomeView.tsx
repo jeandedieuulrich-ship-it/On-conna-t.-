@@ -14,6 +14,10 @@ import {
   ShieldCheck,
   CreditCard,
   Scale,
+  Share2,
+  Copy,
+  Check,
+  MessageCircle,
 } from 'lucide-react';
 import { PAYMENT_CONFIG } from '../data/mockData';
 
@@ -29,8 +33,23 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSearchSubmit }) => {
     setIsRegisterProviderOpen,
     setIsPaymentModalOpen,
     setIsLegalModalOpen,
+    setIsShareModalOpen,
     t,
   } = useApp();
+
+  const [copiedLink, setCopiedLink] = React.useState(false);
+
+  const shareUrl = 'https://ais-pre-vf4t5spiqbt62qvvejhqc2-194091796142.europe-west2.run.app';
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(shareUrl);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 3000);
+    } catch (e) {
+      // Ignored
+    }
+  };
 
   const publishedEvents = events.filter((e) => e.statut === 'publie');
   const featuredEvents = publishedEvents.filter((e) => e.featured).slice(0, 3);
@@ -372,6 +391,47 @@ export const HomeView: React.FC<HomeViewProps> = ({ onSearchSubmit }) => {
                 className="w-full sm:w-auto px-6 py-2.5 bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl transition-all cursor-pointer text-center"
               >
                 Voir les tarifs et liens de paiement
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Section 6: 📲 PARTAGER ON CONNAÎT AVEC VOS AMIS */}
+        <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-6 sm:p-8 text-white border border-slate-700 shadow-xl relative overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-orange-500/20 text-orange-400 text-xs font-black">
+                <Share2 className="w-3.5 h-3.5" />
+                <span>LIEN DE PARTAGE OFFICIEL</span>
+              </div>
+              <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white">
+                Partagez l'application avec vos proches !
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300">
+                Faites profiter vos amis, collègues et familles de tous les bons plans sorties, concerts live, salons et prestataires de Côte d'Ivoire.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+              <div className="flex items-center bg-slate-950/80 border border-slate-700 rounded-2xl px-3 py-2 text-xs font-mono text-slate-300">
+                <span className="truncate max-w-[220px] sm:max-w-[260px]">{shareUrl}</span>
+                <button
+                  type="button"
+                  onClick={handleCopy}
+                  className="ml-2 px-2.5 py-1 bg-white/10 hover:bg-white/20 text-white rounded-lg text-xs font-bold transition-colors cursor-pointer shrink-0 flex items-center gap-1"
+                >
+                  {copiedLink ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+                  <span>{copiedLink ? 'Copié !' : 'Copier'}</span>
+                </button>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsShareModalOpen(true)}
+                className="px-5 py-3 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-extrabold text-xs sm:text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-95 shrink-0"
+              >
+                <Share2 className="w-4 h-4" />
+                <span>Ouvrir les options de partage</span>
               </button>
             </div>
           </div>

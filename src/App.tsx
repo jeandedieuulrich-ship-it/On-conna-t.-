@@ -18,6 +18,7 @@ import { PaymentModal } from './components/PaymentModal';
 import { QuoteModal } from './components/QuoteModal';
 import { ReportModal } from './components/ReportModal';
 import { LegalDataPrivacyModal } from './components/LegalDataPrivacyModal';
+import { ShareAppModal } from './components/ShareAppModal';
 import { Footer } from './components/Footer';
 
 const MainLayout: React.FC = () => {
@@ -116,6 +117,7 @@ const MainLayout: React.FC = () => {
       <QuoteModal />
       <ReportModal />
       <LegalDataPrivacyModal />
+      <ShareAppModal />
     </div>
   );
 };

@@ -59,6 +59,8 @@ interface AppContextType {
   setReportTargetEvent: (evt: EventItem | null) => void;
   isLegalModalOpen: boolean;
   setIsLegalModalOpen: (open: boolean) => void;
+  isShareModalOpen: boolean;
+  setIsShareModalOpen: (open: boolean) => void;
 
   // Location
   userCoords: { lat: number; lng: number } | null;
@@ -198,6 +200,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [reportTargetEvent, setReportTargetEvent] = useState<EventItem | null>(null);
   const [isLegalModalOpen, setIsLegalModalOpen] = useState(false);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
   // Search & Filter globals
   const [selectedCityFilter, setSelectedCityFilter] = useState('');
@@ -479,6 +482,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setReportTargetEvent,
         isLegalModalOpen,
         setIsLegalModalOpen,
+        isShareModalOpen,
+        setIsShareModalOpen,
         userCoords,
         locationPermission,
         requestUserLocation,
