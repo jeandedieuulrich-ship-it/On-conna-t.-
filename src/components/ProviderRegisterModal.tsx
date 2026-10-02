@@ -99,37 +99,44 @@ export const ProviderRegisterModal: React.FC = () => {
 
   if (!isRegisterProviderOpen) return null;
 
-  const openCamera = (target: 'id' | 'creator' | 'profil' | 'activity') => {
+  const openCamera = (
+    target: 'id' | 'creator' | 'profil' | 'activity',
+    preferredFacing: 'user' | 'environment' = target === 'creator' ? 'user' : 'environment'
+  ) => {
     if (target === 'id') {
       setCameraModal({
         isOpen: true,
         mode: 'document',
+        initialFacing: preferredFacing,
         title: `Photographier ma pièce (${pieceIdentiteType})`,
-        subtitle: 'Prenez la photo recto bien cadrée avec la caméra de votre téléphone',
+        subtitle: `Prise de vue active : ${preferredFacing === 'user' ? 'Caméra Avant (Selfie)' : 'Caméra Arrière'}`,
         target: 'id',
       });
     } else if (target === 'creator') {
       setCameraModal({
         isOpen: true,
         mode: 'selfie',
-        title: 'Prendre mon Selfie de face en direct',
-        subtitle: 'Cadrez votre visage de face avec la caméra frontale pour certifier votre compte',
+        initialFacing: preferredFacing,
+        title: 'Photo de face du créateur / gérant',
+        subtitle: `Prise de vue active : ${preferredFacing === 'user' ? 'Caméra Avant (Selfie)' : 'Caméra Arrière'}`,
         target: 'creator',
       });
     } else if (target === 'profil') {
       setCameraModal({
         isOpen: true,
         mode: 'selfie',
+        initialFacing: preferredFacing,
         title: 'Photo de profil public',
-        subtitle: 'Prenez la photo qui apparaîtra sur votre vitrine',
+        subtitle: `Prise de vue active : ${preferredFacing === 'user' ? 'Caméra Avant (Selfie)' : 'Caméra Arrière'}`,
         target: 'profil',
       });
     } else {
       setCameraModal({
         isOpen: true,
         mode: 'document',
+        initialFacing: preferredFacing,
         title: 'Photo de réalisation pour le catalogue',
-        subtitle: 'Photographiez votre matériel, votre stand ou une activité récente',
+        subtitle: `Prise de vue active : ${preferredFacing === 'user' ? 'Caméra Avant' : 'Caméra Arrière'}`,
         target: 'activity',
       });
     }
@@ -406,14 +413,29 @@ export const ProviderRegisterModal: React.FC = () => {
                         </div>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => openCamera('id')}
-                        className="w-full py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
-                      >
-                        <Camera className="w-4 h-4" />
-                        <span>{pieceIdentiteUrl ? 'Reprendre la photo de ma pièce 📸' : 'Photographier ma pièce avec le téléphone 📸'}</span>
-                      </button>
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] text-slate-500 font-bold">
+                          Choisir la caméra :
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openCamera('id', 'environment')}
+                            className="py-2.5 px-2 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <Camera className="w-4 h-4" />
+                            <span>📷 Caméra Arrière</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openCamera('id', 'user')}
+                            className="py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <User className="w-4 h-4 text-emerald-400" />
+                            <span>🤳 Caméra Avant</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     {/* PHOTO 2: SELFIE DE FACE DIRECTEMENT AU TÉLÉPHONE */}
@@ -421,10 +443,10 @@ export const ProviderRegisterModal: React.FC = () => {
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
                           <User className="w-4 h-4 text-emerald-600" />
-                          <span>Selfie de face du créateur / gérant *</span>
+                          <span>Photo de face du créateur / gérant *</span>
                         </label>
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                          {photoCreateurUrl ? 'Selfie prêt ✅' : 'À prendre'}
+                          {photoCreateurUrl ? 'Photo prête ✅' : 'À prendre'}
                         </span>
                       </div>
 
@@ -440,14 +462,29 @@ export const ProviderRegisterModal: React.FC = () => {
                         </div>
                       )}
 
-                      <button
-                        type="button"
-                        onClick={() => openCamera('creator')}
-                        className="w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
-                      >
-                        <Camera className="w-4 h-4 text-emerald-400" />
-                        <span>{photoCreateurUrl ? 'Reprendre mon selfie de face 🤳' : 'Prendre mon Selfie de face en direct 🤳'}</span>
-                      </button>
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] text-slate-500 font-bold">
+                          Choisir la caméra :
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openCamera('creator', 'user')}
+                            className="py-2.5 px-2 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <User className="w-4 h-4 text-emerald-400" />
+                            <span>🤳 Caméra Avant (Selfie)</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openCamera('creator', 'environment')}
+                            className="py-2.5 px-2 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <Camera className="w-4 h-4" />
+                            <span>📷 Caméra Arrière</span>
+                          </button>
+                        </div>
+                      </div>
                     </div>
 
                     <div className="sm:col-span-2">
@@ -810,6 +847,7 @@ export const ProviderRegisterModal: React.FC = () => {
         isOpen={cameraModal.isOpen}
         onClose={() => setCameraModal((prev) => ({ ...prev, isOpen: false }))}
         mode={cameraModal.mode}
+        initialFacing={cameraModal.initialFacing}
         title={cameraModal.title}
         subtitle={cameraModal.subtitle}
         onCapture={handleCaptureResult}

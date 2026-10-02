@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Camera, RefreshCw, Check, X, SwitchCamera, AlertCircle, Smartphone } from 'lucide-react';
+import { Camera, RefreshCw, Check, X, SwitchCamera, Smartphone, User, Image as ImageIcon } from 'lucide-react';
 
 interface CameraCaptureModalProps {
   isOpen: boolean;
@@ -7,6 +7,7 @@ interface CameraCaptureModalProps {
   title: string;
   subtitle: string;
   mode: 'selfie' | 'document';
+  initialFacing?: 'user' | 'environment';
   onCapture: (base64Image: string) => void;
 }
 
@@ -16,12 +17,11 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   title,
   subtitle,
   mode,
+  initialFacing = mode === 'selfie' ? 'user' : 'environment',
   onCapture,
 }) => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [facingMode, setFacingMode] = useState<'user' | 'environment'>(
-    mode === 'selfie' ? 'user' : 'environment'
-  );
+  const [facingMode, setFacingMode] = useState<'user' | 'environment'>(initialFacing);
   const [streamError, setStreamError] = useState<string | null>(null);
   const [isCameraActive, setIsCameraActive] = useState(false);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -45,17 +45,30 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
 
     try {
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Caméra non disponible dans ce navigateur. Utilisez le bouton appareil photo ci-dessous.');
+        throw new Error('Caméra non supportée directement.');
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: {
-          facingMode: { ideal: facing },
-          width: { ideal: 1280 },
-          height: { ideal: 720 },
-        },
-        audio: false,
-      });
+      // Try with exact facingMode first, then fallback to ideal
+      let stream: MediaStream;
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: facing,
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      } catch (e) {
+        stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: { ideal: facing },
+            width: { ideal: 1280 },
+            height: { ideal: 720 },
+          },
+          audio: false,
+        });
+      }
 
       streamRef.current = stream;
       if (videoRef.current) {
@@ -66,7 +79,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     } catch (err: any) {
       console.warn('Camera stream error:', err);
       setStreamError(
-        'Accès direct caméra restreint. Vous pouvez prendre la photo directement avec l\'appareil photo de votre téléphone via le bouton ci-dessous.'
+        'Accès direct restreint. Vous pouvez utiliser le bouton de prise de vue ci-dessous pour ouvrir l\'appareil photo de votre téléphone.'
       );
       setIsCameraActive(false);
     }
@@ -75,7 +88,8 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
   useEffect(() => {
     if (isOpen) {
       setCapturedImage(null);
-      startCamera(facingMode);
+      setFacingMode(initialFacing);
+      startCamera(initialFacing);
     } else {
       stopCamera();
     }
@@ -83,15 +97,20 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     return () => {
       stopCamera();
     };
-  }, [isOpen, facingMode]);
+  }, [isOpen, initialFacing]);
+
+  const switchFacing = (newFacing: 'user' | 'environment') => {
+    if (facingMode === newFacing && isCameraActive) return;
+    setFacingMode(newFacing);
+    startCamera(newFacing);
+  };
 
   if (!isOpen) return null;
 
   const handleCaptureSnapshot = () => {
     if (countdown !== null) return;
 
-    // Optional 3-second countdown for selfies
-    if (mode === 'selfie') {
+    if (facingMode === 'user') {
       setCountdown(3);
       const timer = setInterval(() => {
         setCountdown((prev) => {
@@ -102,7 +121,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
           }
           return prev - 1;
         });
-      }, 700);
+      }, 600);
     } else {
       takeSnapshotNow();
     }
@@ -120,7 +139,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Flip horizontal if selfie for natural mirror effect
+    // Flip horizontal if front selfie for natural mirror effect
     if (facingMode === 'user') {
       ctx.translate(canvas.width, 0);
       ctx.scale(-1, 1);
@@ -159,11 +178,6 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
     startCamera(facingMode);
   };
 
-  const toggleCameraFacing = () => {
-    const nextFacing = facingMode === 'user' ? 'environment' : 'user';
-    setFacingMode(nextFacing);
-  };
-
   return (
     <div className="fixed inset-0 z-60 overflow-y-auto bg-slate-950/90 backdrop-blur-md flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
       <div className="relative w-full max-w-lg bg-slate-900 text-white rounded-3xl shadow-2xl overflow-hidden border border-slate-700 flex flex-col">
@@ -189,6 +203,40 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
             <X className="w-5 h-5" />
           </button>
         </div>
+
+        {/* Camera Switcher Bar (Front / Back Choice with Zero Difficulty) */}
+        {!capturedImage && (
+          <div className="bg-slate-950 px-4 py-2 border-b border-slate-800 flex items-center justify-between">
+            <span className="text-[11px] text-slate-400 font-bold">Caméra active :</span>
+            <div className="flex items-center gap-1.5 bg-slate-800 p-1 rounded-xl">
+              <button
+                type="button"
+                onClick={() => switchFacing('user')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  facingMode === 'user'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <User className="w-3.5 h-3.5" />
+                <span>🤳 Caméra Avant (Selfie)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => switchFacing('environment')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                  facingMode === 'environment'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5" />
+                <span>📷 Caméra Arrière</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Viewfinder / Preview Body */}
         <div className="relative bg-black aspect-4/3 flex items-center justify-center overflow-hidden">
@@ -219,21 +267,21 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               />
 
               {/* Viewfinder Guidelines */}
-              {mode === 'selfie' ? (
+              {facingMode === 'user' ? (
                 /* Oval Frame Guide for Selfie */
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                   <div className="w-48 h-60 border-2 border-dashed border-emerald-400/80 rounded-full shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] flex items-end justify-center pb-4">
                     <span className="text-[10px] font-bold text-emerald-300 bg-slate-950/70 px-2 py-0.5 rounded-md">
-                      Placez votre visage au centre
+                      Cadrez votre visage
                     </span>
                   </div>
                 </div>
               ) : (
-                /* Card Frame Guide for ID */
+                /* Card Frame Guide for Rear Camera */
                 <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
                   <div className="w-68 h-44 border-2 border-dashed border-amber-400/80 rounded-2xl shadow-[0_0_0_9999px_rgba(0,0,0,0.4)] flex items-end justify-center pb-2">
                     <span className="text-[10px] font-bold text-amber-300 bg-slate-950/70 px-2 py-0.5 rounded-md">
-                      Cadrez la pièce d'identité recto
+                      Cadrez le document bien à plat
                     </span>
                   </div>
                 </div>
@@ -248,14 +296,14 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                 </div>
               )}
 
-              {/* Switch camera toggle */}
+              {/* Floating Switch Button */}
               <button
                 type="button"
-                onClick={toggleCameraFacing}
-                className="absolute top-3 right-3 p-2 bg-slate-900/80 backdrop-blur-sm rounded-full text-white hover:bg-slate-800 transition-colors cursor-pointer border border-white/20"
-                title="Changer de caméra (Avant / Arrière)"
+                onClick={() => switchFacing(facingMode === 'user' ? 'environment' : 'user')}
+                className="absolute top-3 right-3 py-1.5 px-3 bg-slate-900/85 backdrop-blur-sm rounded-full text-white hover:bg-slate-800 transition-colors cursor-pointer border border-white/20 flex items-center gap-1.5 text-xs font-bold"
               >
-                <SwitchCamera className="w-4 h-4" />
+                <SwitchCamera className="w-3.5 h-3.5 text-emerald-400" />
+                <span>{facingMode === 'user' ? 'Passer caméra arrière' : 'Passer en selfie'}</span>
               </button>
             </div>
           ) : (
@@ -266,21 +314,42 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
               </div>
               <div className="space-y-1">
                 <h4 className="font-extrabold text-sm text-white">
-                  Prise de vue directe au téléphone
+                  Prise de vue directe au smartphone
                 </h4>
                 <p className="text-xs text-slate-400 leading-relaxed">
-                  Appuyez sur le bouton ci-dessous pour ouvrir directement l'appareil photo de votre smartphone et prendre votre {mode === 'selfie' ? 'selfie' : 'pièce d\'identité'}.
+                  Appuyez pour ouvrir directement l'appareil photo ({facingMode === 'user' ? 'Caméra Avant / Selfie' : 'Caméra Arrière'}).
                 </p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => fileInputRef.current?.click()}
-                className="w-full py-3 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors cursor-pointer"
-              >
-                <Camera className="w-4 h-4" />
-                <span>Ouvrir l'appareil photo du téléphone</span>
-              </button>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (fileInputRef.current) {
+                      fileInputRef.current.setAttribute('capture', 'user');
+                      fileInputRef.current.click();
+                    }
+                  }}
+                  className="w-full py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-lg transition-colors cursor-pointer"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Prendre avec la Caméra Avant (Selfie)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (fileInputRef.current) {
+                      fileInputRef.current.setAttribute('capture', 'environment');
+                      fileInputRef.current.click();
+                    }
+                  }}
+                  className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 border border-slate-600 transition-colors cursor-pointer"
+                >
+                  <Camera className="w-4 h-4 text-amber-400" />
+                  <span>Prendre avec la Caméra Arrière</span>
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -291,7 +360,7 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
           ref={fileInputRef}
           type="file"
           accept="image/*"
-          capture={mode === 'selfie' ? 'user' : 'environment'}
+          capture={facingMode}
           onChange={handleNativeFileInput}
           className="hidden"
         />
@@ -336,7 +405,9 @@ export const CameraCaptureModal: React.FC<CameraCaptureModalProps> = ({
                   className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl flex items-center gap-2 shadow-lg transition-colors cursor-pointer"
                 >
                   <Camera className="w-4 h-4" />
-                  <span>Prendre la photo maintenant</span>
+                  <span>
+                    {facingMode === 'user' ? 'Prendre mon selfie' : 'Capturer la photo'}
+                  </span>
                 </button>
               )}
             </>
