@@ -118,6 +118,33 @@ export interface PortfolioItem {
   titre: string;
 }
 
+export interface ActivityCatalogItem {
+  id: string;
+  titre: string;
+  description: string;
+  photoUrl: string;
+  date: string;
+  categorie?: string;
+}
+
+export interface SecurityAuditLog {
+  id: string;
+  timestamp: string;
+  type: 'PROVIDER_REGISTRATION' | 'ID_VERIFICATION' | 'TRIAL_EXPIRY' | 'PAYMENT_ACTIVATION' | 'SECURITY_SCAN' | 'SUSPICIOUS_REPORT';
+  severity: 'info' | 'warning' | 'alert' | 'success';
+  message: string;
+  targetId?: string;
+  aiNotes?: string;
+}
+
+export interface AdminProfile {
+  nom: string;
+  email: string;
+  role: 'super_admin';
+  derniereConnexion: string;
+  aiSentinelActive: boolean;
+}
+
 export interface ProviderItem {
   id: string;
   user_id?: string;
@@ -130,8 +157,10 @@ export interface ProviderItem {
   commune: string;
   zoneIntervention: string[];
   photoProfil: string;
+  photoCreateurUrl?: string; // Photo de face du créateur
   services: ProviderService[];
   portfolio: PortfolioItem[];
+  catalogPhotos: ActivityCatalogItem[]; // Catalogue d'activités & réalisations
   contact: {
     telephone: string;
     whatsapp: string;
@@ -148,10 +177,11 @@ export interface ProviderItem {
   nomCivil?: string;
   prenoms?: string;
   dateNaissance?: string;
-  pieceIdentiteType?: 'CNI' | 'Passeport' | 'Attestation';
-  numeroEntreprise?: string; // RCCM or IDU
+  pieceIdentiteType?: 'CNI' | 'Permis' | 'Passeport' | 'Attestation';
+  pieceIdentiteUrl?: string; // Photo de la pièce d'identité (CNI, Permis, Passeport)
   verificationStatus: 'verified' | 'pending' | 'rejected';
   verificationDocUrl?: string;
+  aiVerificationNotes?: string;
 
   // Subscription Details (3 months trial, then 2000 FCFA/month)
   trialStartDate: string;

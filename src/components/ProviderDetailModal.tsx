@@ -275,6 +275,59 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provid
             </div>
           </div>
 
+          {/* Activity Catalog Section (Catalogue d'activités & Réalisations) */}
+          {provider.catalogPhotos && provider.catalogPhotos.length > 0 && (
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-black text-slate-900 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-emerald-600" />
+                    <span>Catalogue d'Activités & Réalisations ({provider.catalogPhotos.length})</span>
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Photos réelles des prestations et événements réalisés par ce prestataire.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+                {provider.catalogPhotos.map((cat) => (
+                  <div
+                    key={cat.id}
+                    onClick={() => setSelectedPhoto(cat.photoUrl)}
+                    className="group rounded-2xl overflow-hidden border border-slate-200 bg-slate-50 shadow-2xs hover:shadow-md transition-all cursor-pointer flex flex-col"
+                  >
+                    <div className="relative aspect-4/3 overflow-hidden bg-slate-900">
+                      <img
+                        src={cat.photoUrl}
+                        alt={cat.titre}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <span className="absolute top-2 left-2 bg-slate-950/75 backdrop-blur-sm text-white text-[10px] font-bold px-2 py-0.5 rounded-md">
+                        {cat.categorie || 'Activité'}
+                      </span>
+                    </div>
+
+                    <div className="p-3 flex-1 flex flex-col justify-between">
+                      <div>
+                        <h4 className="font-extrabold text-xs text-slate-900 line-clamp-1">
+                          {cat.titre}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-1 line-clamp-2">
+                          {cat.description}
+                        </p>
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-medium mt-2 pt-1.5 border-t border-slate-100 flex items-center justify-between">
+                        <span>📅 {cat.date}</span>
+                        <span className="text-emerald-700 font-bold group-hover:underline">Agrandir 🔍</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Portfolio & Photos / Videos */}
           {provider.portfolio && provider.portfolio.length > 0 && (
             <div>
@@ -363,6 +416,28 @@ export const ProviderDetailModal: React.FC<ProviderDetailModalProps> = ({ provid
             </button>
           </div>
         </div>
+
+        {/* Lightbox Zoom Viewer */}
+        {selectedPhoto && (
+          <div
+            onClick={() => setSelectedPhoto(null)}
+            className="fixed inset-0 z-60 bg-black/90 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in"
+          >
+            <div className="relative max-w-4xl max-h-[90vh] flex flex-col items-center">
+              <button
+                onClick={() => setSelectedPhoto(null)}
+                className="absolute -top-10 right-0 text-white/80 hover:text-white p-2"
+              >
+                <X className="w-8 h-8" />
+              </button>
+              <img
+                src={selectedPhoto}
+                alt="Agrandissement"
+                className="max-w-full max-h-[85vh] object-contain rounded-2xl shadow-2xl"
+              />
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

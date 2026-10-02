@@ -195,12 +195,13 @@ export const Navbar: React.FC = () => {
               onClick={() => setActiveTab('admin')}
               className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-1.5 relative ${
                 activeTab === 'admin'
-                  ? 'bg-slate-900 text-white font-bold'
+                  ? 'bg-slate-900 text-white font-bold ring-2 ring-emerald-500/50'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
+              title="Console Super-Administrateur & Robot IA SENTINEL-CI"
             >
               <ShieldCheck className="w-4 h-4 text-amber-400" />
-              <span>Admin</span>
+              <span>Admin (Ulrich 👑)</span>
               {totalAdminAlerts > 0 && (
                 <span className="bg-red-500 text-white text-[10px] font-bold px-1.5 py-0.2 rounded-full">
                   {totalAdminAlerts}

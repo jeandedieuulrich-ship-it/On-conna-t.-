@@ -7,6 +7,9 @@ import {
   SubscriptionPayment,
   Language,
   UserRole,
+  ActivityCatalogItem,
+  SecurityAuditLog,
+  AdminProfile,
 } from '../types';
 import { INITIAL_EVENTS, INITIAL_PROVIDERS } from '../data/mockData';
 import { TRANSLATIONS } from '../utils/translations';
@@ -21,6 +24,15 @@ interface AppContextType {
 
   activeTab: 'home' | 'events' | 'providers' | 'near-me' | 'map' | 'organizer' | 'provider-hub' | 'admin';
   setActiveTab: (tab: 'home' | 'events' | 'providers' | 'near-me' | 'map' | 'organizer' | 'provider-hub' | 'admin') => void;
+
+  // Admin & Security Sentinel
+  adminProfile: AdminProfile;
+  auditLogs: SecurityAuditLog[];
+  addSecurityAuditLog: (type: SecurityAuditLog['type'], message: string, severity?: SecurityAuditLog['severity'], targetId?: string) => void;
+
+  // Active Provider Selection
+  currentProviderId: string;
+  setCurrentProviderId: (id: string) => void;
 
   events: EventItem[];
   providers: ProviderItem[];
@@ -75,6 +87,12 @@ interface AppContextType {
   registerProvider: (data: Partial<ProviderItem>) => void;
   updateProviderVerification: (id: string, status: 'verified' | 'rejected') => void;
   renewProviderSubscription: (providerId: string, durationMonths: number) => void;
+  autoActivateProviderWithPayment: (providerId: string, operateur: 'Wave' | 'MTN Money' | 'Orange Money', durationMonths: number) => void;
+  toggleProviderTrialExpiry: (providerId: string) => void;
+
+  // Provider Catalog Activities
+  addActivityPhotoToProvider: (providerId: string, photo: { titre: string; description: string; photoUrl: string; categorie?: string }) => void;
+  deleteActivityPhotoFromProvider: (providerId: string, photoId: string) => void;
 
   submitQuoteRequest: (quote: Omit<QuoteRequest, 'id' | 'dateCreation' | 'statut'>) => void;
   updateQuoteStatus: (id: string, status: 'accepte' | 'refuse') => void;
@@ -101,6 +119,72 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const [userRole, setUserRole] = useState<UserRole>('visitor');
   const [activeTab, setActiveTab] = useState<'home' | 'events' | 'providers' | 'near-me' | 'map' | 'organizer' | 'provider-hub' | 'admin'>('home');
+
+  // Admin & Security Sentinel
+  const [adminProfile] = useState<AdminProfile>({
+    nom: 'Ulrich Jean-Dieu',
+    email: 'jeandedieuulrich@gmail.com',
+    role: 'super_admin',
+    derniereConnexion: 'Session Active (Super-Administrateur)',
+    aiSentinelActive: true,
+  });
+
+  const [currentProviderId, setCurrentProviderId] = useState<string>(() => {
+    return 'prov-1';
+  });
+
+  const [auditLogs, setAuditLogs] = useState<SecurityAuditLog[]>(() => {
+    const saved = localStorage.getItem('onconnait_audit_logs');
+    return saved
+      ? JSON.parse(saved)
+      : [
+          {
+            id: 'log-1',
+            timestamp: '11:42',
+            type: 'SECURITY_SCAN',
+            severity: 'success',
+            message: 'Surveillance active par SENTINEL-CI : 0 intrusion, conformité ARTCI 100%',
+            aiNotes: 'Vérification biométrique et cryptage opérationnels.',
+          },
+          {
+            id: 'log-2',
+            timestamp: '11:15',
+            type: 'ID_VERIFICATION',
+            severity: 'info',
+            message: 'Contrôle automatique de pièce CNI & photo face créateur pour Akwaba Visuals Studio',
+            aiNotes: 'Concordance faciale et document conformes.',
+          },
+          {
+            id: 'log-3',
+            timestamp: '10:30',
+            type: 'PAYMENT_ACTIVATION',
+            severity: 'success',
+            message: 'Activation automatique d\'abonnement via lien Wave Direct',
+            aiNotes: 'Transaction validée sans délai d\'attente.',
+          },
+        ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('onconnait_audit_logs', JSON.stringify(auditLogs));
+  }, [auditLogs]);
+
+  const addSecurityAuditLog = (
+    type: SecurityAuditLog['type'],
+    message: string,
+    severity: SecurityAuditLog['severity'] = 'info',
+    targetId?: string
+  ) => {
+    const newLog: SecurityAuditLog = {
+      id: `log-${Date.now()}`,
+      timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
+      type,
+      severity,
+      message,
+      targetId,
+    };
+    setAuditLogs((prev) => [newLog, ...prev.slice(0, 49)]);
+  };
 
   // Events
   const [events, setEvents] = useState<EventItem[]>(() => {
@@ -313,19 +397,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 90); // 3 months = 90 days trial
 
+    const defaultFacePhoto =
+      data.photoCreateurUrl ||
+      data.photoProfil ||
+      'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80';
+    const defaultDocPhoto =
+      data.pieceIdentiteUrl ||
+      'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80';
+
     const newProvider: ProviderItem = {
       id: `prov-${Date.now()}`,
       user_id: `user_prov_${Date.now()}`,
       nomCommercial: data.nomCommercial || 'Nouveau Prestataire CI',
       profession: data.profession || 'Photographe',
-      domaine: data.domaine || 'Événementiel en Côte d\'Ivoire',
+      domaine: data.domaine || `Prestataire Événementiel en Côte d'Ivoire`,
       presentation: data.presentation || '',
       ville: data.ville || 'Abidjan',
       commune: data.commune || 'Cocody',
       zoneIntervention: data.zoneIntervention || ['Abidjan'],
-      photoProfil: data.photoProfil || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+      photoProfil: data.photoProfil || defaultFacePhoto,
+      photoCreateurUrl: defaultFacePhoto,
       services: data.services || [],
       portfolio: data.portfolio || [],
+      catalogPhotos: data.catalogPhotos || [
+        {
+          id: `act-${Date.now()}-1`,
+          titre: 'Activité inaugurale',
+          description: 'Prestation d\'excellence réalisée pour nos clients.',
+          photoUrl: data.photoProfil || defaultFacePhoto,
+          date: now.toISOString().split('T')[0],
+          categorie: data.profession || 'Activité',
+        },
+      ],
       contact: data.contact || {
         telephone: '+225 00 00 00 00 00',
         whatsapp: '+225 00 00 00 00 00',
@@ -338,7 +441,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       prenoms: data.prenoms,
       dateNaissance: data.dateNaissance,
       pieceIdentiteType: data.pieceIdentiteType || 'CNI',
-      numeroEntreprise: data.numeroEntreprise,
+      pieceIdentiteUrl: defaultDocPhoto,
       verificationStatus: 'pending',
       // 3 months free trial
       trialStartDate: now.toISOString().split('T')[0],
@@ -350,6 +453,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setProviders((prev) => [newProvider, ...prev]);
+    setCurrentProviderId(newProvider.id);
+    addSecurityAuditLog(
+      'PROVIDER_REGISTRATION',
+      `Nouveau compte : ${newProvider.nomCommercial} (${newProvider.profession}) avec CNI/Permis/Passeport et photo créateur`,
+      'info',
+      newProvider.id
+    );
   };
 
   const updateProviderVerification = (id: string, status: 'verified' | 'rejected') => {
@@ -363,6 +473,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           : p
       )
+    );
+    addSecurityAuditLog(
+      'ID_VERIFICATION',
+      `Vérification d'identité pour prestataire ${id} passée à : ${status}`,
+      status === 'verified' ? 'success' : 'warning',
+      id
     );
   };
 
@@ -383,6 +499,89 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         }
         return p;
       })
+    );
+  };
+
+  const autoActivateProviderWithPayment = (
+    providerId: string,
+    operateur: 'Wave' | 'MTN Money' | 'Orange Money',
+    durationMonths: number = 1
+  ) => {
+    const target = providers.find((p) => p.id === providerId);
+    renewProviderSubscription(providerId, durationMonths);
+    const newPayment: SubscriptionPayment = {
+      id: `pay-${Date.now()}`,
+      providerId,
+      providerName: target?.nomCommercial || 'Prestataire ON CONNAÎT',
+      operateur,
+      montantFCFA: 2000 * durationMonths,
+      referenceTransaction: `AUTO-${operateur.substring(0, 2).toUpperCase()}-${Math.floor(100000 + Math.random() * 900000)}`,
+      telephonePaiement: 'Lien Sécurisé Mobile Money',
+      datePaiement: new Date().toISOString().split('T')[0],
+      statut: 'valide',
+    };
+    setPayments((prev) => [newPayment, ...prev]);
+    addSecurityAuditLog(
+      'PAYMENT_ACTIVATION',
+      `Activation automatique de ${target?.nomCommercial || providerId} suite à paiement par lien ${operateur}`,
+      'success',
+      providerId
+    );
+  };
+
+  const toggleProviderTrialExpiry = (providerId: string) => {
+    setProviders((prev) =>
+      prev.map((p) => {
+        if (p.id === providerId) {
+          const isNowExpired = p.subscriptionStatus !== 'expired';
+          const newStatus = isNowExpired ? 'expired' : 'active';
+          return {
+            ...p,
+            subscriptionStatus: newStatus,
+            isTrialActive: false,
+            trialEndDate: isNowExpired ? '2026-09-01' : '2026-12-31',
+          };
+        }
+        return p;
+      })
+    );
+  };
+
+  const addActivityPhotoToProvider = (
+    providerId: string,
+    photo: { titre: string; description: string; photoUrl: string; categorie?: string }
+  ) => {
+    const newPhotoItem: ActivityCatalogItem = {
+      id: `act-${Date.now()}`,
+      titre: photo.titre,
+      description: photo.description,
+      photoUrl: photo.photoUrl,
+      date: new Date().toISOString().split('T')[0],
+      categorie: photo.categorie || 'Activité',
+    };
+    setProviders((prev) =>
+      prev.map((p) =>
+        p.id === providerId
+          ? {
+              ...p,
+              catalogPhotos: [newPhotoItem, ...(p.catalogPhotos || [])],
+            }
+          : p
+      )
+    );
+    addSecurityAuditLog('PROVIDER_REGISTRATION', `Nouvelle photo d'activité ajoutée au catalogue pour ${providerId}`, 'info', providerId);
+  };
+
+  const deleteActivityPhotoFromProvider = (providerId: string, photoId: string) => {
+    setProviders((prev) =>
+      prev.map((p) =>
+        p.id === providerId
+          ? {
+              ...p,
+              catalogPhotos: (p.catalogPhotos || []).filter((ph) => ph.id !== photoId),
+            }
+          : p
+      )
     );
   };
 
@@ -451,6 +650,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setUserRole,
         activeTab,
         setActiveTab,
+        adminProfile,
+        auditLogs,
+        addSecurityAuditLog,
+        currentProviderId,
+        setCurrentProviderId,
         events,
         providers,
         quotes,
@@ -493,6 +697,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         registerProvider,
         updateProviderVerification,
         renewProviderSubscription,
+        autoActivateProviderWithPayment,
+        toggleProviderTrialExpiry,
+        addActivityPhotoToProvider,
+        deleteActivityPhotoFromProvider,
         submitQuoteRequest,
         updateQuoteStatus,
         submitReport,

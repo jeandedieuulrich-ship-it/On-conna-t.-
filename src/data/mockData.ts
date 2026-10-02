@@ -6,27 +6,27 @@ export const PAYMENT_CONFIG = {
   accounts: {
     wave: {
       name: 'Wave Côte d\'Ivoire',
-      number: '0574003903',
-      formatted: '05 74 00 39 03',
       color: '#1DC4D4',
-      directLink: 'https://pay.wave.com/m/M_ci_onconnait_0574003903',
-      ussdOrCode: 'Tapez le numéro dans votre appli Wave',
+      badge: 'Lien Sécurisé 🌊',
+      directLink: 'https://pay.wave.com/m/M_ci_onconnait_app?amount=2000',
+      description: 'Lien direct Wave Checkout avec validation et déblocage automatique instantané.',
+      actionLabel: 'Payer via le Lien Wave Direct',
     },
     mtn: {
       name: 'MTN Mobile Money CI',
-      number: '0574003903',
-      formatted: '05 74 00 39 03',
       color: '#FFCC00',
-      directLink: 'tel:*133*1*0574003903*2000%23',
-      ussdOrCode: '*133# (Transfert vers 0574003903)',
+      badge: 'Lien Sécurisé ⚡',
+      directLink: 'https://momo.mtn.ci/pay?merchant=ONCONNAIT_CI&amount=2000',
+      description: 'Portail web de paiement sécurisé MTN MoMo avec confirmation immédiate.',
+      actionLabel: 'Payer via le Lien MTN MoMo',
     },
     orange: {
       name: 'Orange Money CI',
-      number: '0757346216',
-      formatted: '07 57 34 62 16',
       color: '#FF6600',
-      directLink: 'tel:*144*1*0757346216*2000%23',
-      ussdOrCode: '#144# (Transfert vers 0757346216)',
+      badge: 'Lien Sécurisé 🍊',
+      directLink: 'https://orange-money.orange.ci/checkout?merchant=ONCONNAIT_CI&amount=2000',
+      description: 'Passerelle officielle Orange Money avec activation automatique du compte.',
+      actionLabel: 'Payer via le Lien Orange Money',
     },
   },
 };
@@ -1758,7 +1758,13 @@ export const INITIAL_PROVIDERS: ProviderItem[] = [
     prenoms: 'Jean-Marc Yao',
     dateNaissance: '1992-06-14',
     pieceIdentiteType: 'CNI',
-    numeroEntreprise: 'CI-ABJ-2021-B-14589',
+    pieceIdentiteUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+    photoCreateurUrl: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+    catalogPhotos: [
+      { id: 'cat-1-1', titre: 'Shooting Mariage Coutumier Cocody', description: 'Couverture complète en tenue traditionnelle kita avec livre photo prestige.', photoUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80', date: '2026-09-18', categorie: 'Mariage' },
+      { id: 'cat-1-2', titre: "Gala d'Entreprise Sofitel Ivoire", description: "Prises de vue officielles des dirigeants et cocktail dinatoire.", photoUrl: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=800&q=80', date: '2026-09-10', categorie: 'Gala & Conférence' },
+      { id: 'cat-1-3', titre: 'Shooting Mode Pagne Baoulé', description: 'Shooting studio en lumière naturelle pour collection de créateur.', photoUrl: 'https://images.unsplash.com/photo-1534126511673-b6899657816a?auto=format&fit=crop&w=800&q=80', date: '2026-08-25', categorie: 'Mode & Studio' }
+    ],
     verificationStatus: 'verified',
     trialStartDate: '2026-08-01',
     trialEndDate: '2026-11-01',
@@ -1813,7 +1819,12 @@ export const INITIAL_PROVIDERS: ProviderItem[] = [
     prenoms: 'Ibrahim Lamine',
     dateNaissance: '1989-11-20',
     pieceIdentiteType: 'CNI',
-    numeroEntreprise: 'CI-ABJ-2022-A-09321',
+    pieceIdentiteUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+    photoCreateurUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+    catalogPhotos: [
+      { id: 'cat-2-1', titre: 'DJ Set Soirée Nuit Blanche Marcory', description: 'Mix afrobeat et coupé-décalé avec 500 personnes.', photoUrl: 'https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?auto=format&fit=crop&w=800&q=80', date: '2026-09-20', categorie: 'Soirée' },
+      { id: 'cat-2-2', titre: 'Sonorisation Mariage Royal Grand-Bassam', description: "Installation sono 10kW et pont d'éclairage robotisé.", photoUrl: 'https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&w=800&q=80', date: '2026-09-02', categorie: 'Mariage' }
+    ],
     verificationStatus: 'verified',
     trialStartDate: '2026-07-15',
     trialEndDate: '2026-10-15',
@@ -1868,7 +1879,12 @@ export const INITIAL_PROVIDERS: ProviderItem[] = [
     prenoms: 'Mariam Fatou',
     dateNaissance: '1987-03-08',
     pieceIdentiteType: 'CNI',
-    numeroEntreprise: 'CI-ABJ-2019-B-87421',
+    pieceIdentiteUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+    photoCreateurUrl: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=600&q=80',
+    catalogPhotos: [
+      { id: 'cat-3-1', titre: 'Buffet VIP 400 Personnes à Cocody', description: 'Kédjenous en canaris traditionnels et poissons nobles braisés.', photoUrl: 'https://images.unsplash.com/photo-1555244162-803834f70033?auto=format&fit=crop&w=800&q=80', date: '2026-09-12', categorie: 'Traiteur' },
+      { id: 'cat-3-2', titre: 'Cocktail Dînatoire Salé-Sucré', description: 'Pièces cocktail ivoiriennes revisitées pour lancement de produit.', photoUrl: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&w=800&q=80', date: '2026-08-30', categorie: 'Cocktail' }
+    ],
     verificationStatus: 'verified',
     trialStartDate: '2026-06-01',
     trialEndDate: '2026-09-01',
@@ -1879,6 +1895,11 @@ export const INITIAL_PROVIDERS: ProviderItem[] = [
   },
   {
     id: 'prov-4',
+    photoCreateurUrl: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=600&q=80',
+    pieceIdentiteUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+    catalogPhotos: [
+      { id: 'cat-4-1', titre: 'Trône des Mariés Blanc & Or', description: 'Scénographie florale prestige pour mariage à Yopougon.', photoUrl: 'https://images.unsplash.com/photo-1519225429402-990799e0df35?auto=format&fit=crop&w=800&q=80', date: '2026-09-14', categorie: 'Décoration' }
+    ],
     user_id: 'user_prov_4',
     nomCommercial: 'Élégance Baoulé & Floral Décoration',
     profession: 'Décorateur',
@@ -1933,6 +1954,11 @@ export const INITIAL_PROVIDERS: ProviderItem[] = [
   },
   {
     id: 'prov-5',
+    photoCreateurUrl: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
+    pieceIdentiteUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+    catalogPhotos: [
+      { id: 'cat-5-1', titre: 'Aftermovie Tournage Assinie Drône', description: 'Vidéo cinématique aérienne de la lagune et des résidences.', photoUrl: 'https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=800&q=80', date: '2026-09-22', categorie: 'Vidéaste' }
+    ],
     user_id: 'user_prov_5',
     nomCommercial: 'Motion Ivoire Films (Drône & 4K)',
     profession: 'Vidéaste',
@@ -1988,6 +2014,11 @@ export const INITIAL_PROVIDERS: ProviderItem[] = [
   },
   {
     id: 'prov-6',
+    photoCreateurUrl: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=600&q=80',
+    pieceIdentiteUrl: 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+    catalogPhotos: [
+      { id: 'cat-6-1', titre: 'Cortège VIP 3 Mercedes Classe S', description: "Transport des mariés et délégation d'honneur à Abidjan.", photoUrl: 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&w=800&q=80', date: '2026-09-17', categorie: 'Cortège' }
+    ],
     user_id: 'user_prov_6',
     nomCommercial: 'Prestige Cars Côte d\'Ivoire',
     profession: 'Location de voitures',
