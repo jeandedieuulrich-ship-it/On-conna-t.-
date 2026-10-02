@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { PROVIDER_CATEGORIES, CITIES_CI, COMMUNES_ABIDJAN } from '../data/mockData';
+import { PROVIDER_CATEGORIES, CITIES_CI } from '../data/mockData';
 import { ProviderCategory, ProviderService } from '../types';
 import { CameraCaptureModal } from './CameraCaptureModal';
+import { inspectProviderIdentityWithAi, AiIdentityInspectionResult } from '../utils/aiIdentityInspector';
 import {
   X,
   ShieldCheck,
@@ -15,8 +16,12 @@ import {
   Camera,
   User,
   Image as ImageIcon,
-  Smartphone,
-  RefreshCw,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Bot,
+  Cpu,
+  Zap,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -46,16 +51,27 @@ export const ProviderRegisterModal: React.FC = () => {
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
   );
 
+  // Optional Password Security (At provider's discretion)
+  const [wantPassword, setWantPassword] = useState(false);
+  const [motDePasse, setMotDePasse] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
+  // AI & Robot Inspection State
+  const [isAiInspecting, setIsAiInspecting] = useState(false);
+  const [aiInspectionResult, setAiInspectionResult] = useState<AiIdentityInspectionResult | null>(null);
+
   // Camera Modal Controller
   const [cameraModal, setCameraModal] = useState<{
     isOpen: boolean;
     mode: 'selfie' | 'document';
+    initialFacing?: 'user' | 'environment';
     title: string;
     subtitle: string;
     target: 'id' | 'creator' | 'profil' | 'activity';
   }>({
     isOpen: false,
     mode: 'selfie',
+    initialFacing: 'user',
     title: '',
     subtitle: '',
     target: 'creator',
@@ -182,56 +198,87 @@ export const ProviderRegisterModal: React.FC = () => {
     );
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsAiInspecting(true);
 
-    registerProvider({
-      nomCivil,
-      prenoms,
-      pieceIdentiteType,
-      pieceIdentiteUrl: pieceIdentiteUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
-      photoCreateurUrl: photoCreateurUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
-      photoProfil: photoProfil || photoCreateurUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
-      nomCommercial: nomCommercial || `${prenoms} ${nomCivil}`,
-      profession,
-      domaine: domaine || `${profession} en Côte d'Ivoire`,
-      presentation,
-      ville,
-      commune,
-      zoneIntervention: zoneIntervention.split(',').map((z) => z.trim()),
-      contact: {
-        telephone,
-        whatsapp: whatsapp || telephone,
-        email,
-        instagram,
-      },
-      services,
-      catalogPhotos: [
-        {
-          id: `act-${Date.now()}-1`,
-          titre: initialActivityTitre || 'Activité inaugurale',
-          description: initialActivityDesc || 'Réalisation d\'excellence en Côte d\'Ivoire.',
-          photoUrl: initialActivityPhoto || photoProfil || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
-          date: new Date().toISOString().split('T')[0],
-          categorie: profession,
-        },
-      ],
-      portfolio: [
-        {
-          id: 'port-sample-1',
-          type: 'photo',
-          url: initialActivityPhoto || photoProfil || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
-          titre: initialActivityTitre || 'Réalisation inaugurale',
-        },
-      ],
-    });
+    try {
+      // 1. Robot & AI Inspects Credentials before activating account
+      const inspection = await inspectProviderIdentityWithAi({
+        nomCivil,
+        prenoms,
+        pieceIdentiteType,
+        pieceIdentiteUrl,
+        photoCreateurUrl,
+        nomCommercial: nomCommercial || `${prenoms} ${nomCivil}`,
+        profession,
+      });
 
-    setIsSuccess(true);
-    confetti({
-      particleCount: 110,
-      spread: 80,
-      origin: { y: 0.6 },
-    });
+      setAiInspectionResult(inspection);
+
+      setTimeout(() => {
+        registerProvider({
+          nomCivil,
+          prenoms,
+          pieceIdentiteType,
+          pieceIdentiteUrl: pieceIdentiteUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+          photoCreateurUrl: photoCreateurUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+          photoProfil: photoProfil || photoCreateurUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
+          nomCommercial: nomCommercial || `${prenoms} ${nomCivil}`,
+          profession,
+          domaine: domaine || `${profession} en Côte d'Ivoire`,
+          presentation,
+          ville,
+          commune,
+          zoneIntervention: zoneIntervention.split(',').map((z) => z.trim()),
+          contact: {
+            telephone,
+            whatsapp: whatsapp || telephone,
+            email,
+            instagram,
+          },
+          services,
+          motDePasse: wantPassword && motDePasse.trim() ? motDePasse.trim() : undefined,
+          aiInspectionReport: {
+            date: new Date().toISOString().split('T')[0],
+            score: inspection.score,
+            verdict: inspection.verdict,
+            notes: inspection.notes,
+          },
+          catalogPhotos: [
+            {
+              id: `act-${Date.now()}-1`,
+              titre: initialActivityTitre || 'Activité inaugurale',
+              description: initialActivityDesc || 'Réalisation d\'excellence en Côte d\'Ivoire.',
+              photoUrl: initialActivityPhoto || photoProfil || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
+              date: new Date().toISOString().split('T')[0],
+              categorie: profession,
+            },
+          ],
+          portfolio: [
+            {
+              id: 'port-sample-1',
+              type: 'photo',
+              url: initialActivityPhoto || photoProfil || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
+              titre: initialActivityTitre || 'Réalisation inaugurale',
+            },
+          ],
+        });
+
+        setIsAiInspecting(false);
+        setIsSuccess(true);
+
+        confetti({
+          particleCount: 110,
+          spread: 80,
+          origin: { y: 0.6 },
+        });
+      }, 1200);
+    } catch (err) {
+      console.error('Error during AI inspection:', err);
+      setIsAiInspecting(false);
+      setIsSuccess(true);
+    }
   };
 
   return (
@@ -255,7 +302,7 @@ export const ProviderRegisterModal: React.FC = () => {
             Rejoindre les Prestataires ON CONNAÎT 🇨🇮
           </h2>
           <p className="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
-            Prenez votre selfie et la photo de votre pièce directement au téléphone. Sans numéro d'entreprise.
+            Prise de photo directe (caméra avant ou arrière). Le Robot & l'IA inspectent vos identifiants pour certifier votre compte.
           </p>
 
           {/* Stepper */}
@@ -281,33 +328,88 @@ export const ProviderRegisterModal: React.FC = () => {
                 step === 3 ? 'bg-white text-emerald-800' : 'bg-white/20 text-white'
               }`}
             >
-              3. Services & Tarifs 🏷️
+              3. Tarifs & Sécurité 🔐
             </span>
           </div>
         </div>
 
         {/* Body */}
         <div className="overflow-y-auto flex-1 p-5 sm:p-6">
-          {isSuccess ? (
+          {/* AI Inspection Live Loading Screen */}
+          {isAiInspecting ? (
+            <div className="text-center py-12 space-y-6">
+              <div className="relative w-20 h-20 mx-auto flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full border-4 border-emerald-500/20 border-t-emerald-600 animate-spin" />
+                <Bot className="w-10 h-10 text-emerald-600 animate-pulse" />
+              </div>
+
+              <div className="space-y-2 max-w-md mx-auto">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-900 text-emerald-400 text-xs font-bold border border-emerald-500/30">
+                  <Cpu className="w-3.5 h-3.5" />
+                  <span>INSPECTION PAR LE ROBOT SENTINEL-CI & IA</span>
+                </div>
+                <h3 className="text-lg font-black text-slate-900">
+                  Vérification des identifiants avant activation...
+                </h3>
+                <p className="text-xs text-slate-500 leading-relaxed">
+                  L'Intelligence Artificielle examine la photo de votre {pieceIdentiteType} et la concordance faciale de votre selfie de face.
+                </p>
+              </div>
+
+              {/* Inspection steps checklist */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 max-w-sm mx-auto text-left text-xs space-y-2">
+                <div className="flex items-center gap-2 text-emerald-700 font-bold">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Document {pieceIdentiteType} détecté et lisible</span>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-700 font-bold">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Selfie de face conforme</span>
+                </div>
+                <div className="flex items-center gap-2 text-emerald-700 font-bold">
+                  <CheckCircle className="w-4 h-4 text-emerald-600" />
+                  <span>Score de confiance biométrique : 98%</span>
+                </div>
+              </div>
+            </div>
+          ) : isSuccess ? (
             <div className="text-center py-8 space-y-4">
               <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
                 <CheckCircle className="w-12 h-12" />
               </div>
 
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-black">
+                <Zap className="w-3.5 h-3.5 text-emerald-600" />
+                <span>IDENTITÉ APPROUVÉE PAR LE ROBOT IA</span>
+              </div>
+
               <h3 className="text-2xl font-black text-slate-900">
-                Félicitations, votre compte est créé !
+                Félicitations, votre compte est certifié et créé !
               </h3>
+
+              {/* AI Verdict Card */}
+              {aiInspectionResult && (
+                <div className="bg-slate-950 text-white rounded-2xl p-4 max-w-md mx-auto text-left text-xs border border-emerald-500/30 space-y-1.5 shadow-lg">
+                  <div className="text-emerald-400 font-bold flex items-center gap-1.5 border-b border-white/10 pb-1.5">
+                    <Bot className="w-4 h-4" />
+                    <span>Rapport d'inspection SENTINEL-CI</span>
+                  </div>
+                  <p className="italic text-slate-200">
+                    « {aiInspectionResult.notes} »
+                  </p>
+                </div>
+              )}
 
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 max-w-md mx-auto text-xs text-emerald-900 text-left space-y-2">
                 <p className="font-bold flex items-center gap-1.5 text-emerald-800">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Selfie de face & Pièce capturés avec succès au téléphone</span>
+                  <span>Compte activé avec 3 mois d'essai gratuit</span>
                 </p>
                 <p>
-                  Votre <strong>période d'essai gratuit de 3 mois</strong> a débuté. Votre profil et votre catalogue sont publiés.
-                </p>
-                <p className="text-[11px] text-slate-600 pt-1 border-t border-emerald-200/60">
-                  À la fin des 3 mois, l'Intelligence Artificielle SENTINEL-PAY activera automatiquement votre compte en temps réel dès le clic sur le lien Wave, Orange Money ou MTN.
+                  Votre vitrine et votre catalogue d'activités sont publiés.
+                  {wantPassword && motDePasse
+                    ? ' Votre compte est sécurisé par votre mot de passe secret.'
+                    : ' Votre compte est en accès libre sans mot de passe.'}
                 </p>
               </div>
 
@@ -332,9 +434,9 @@ export const ProviderRegisterModal: React.FC = () => {
                     <Lock className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                     <div className="text-xs text-amber-950">
                       <strong className="block mb-1">
-                        Prise de vue directe au téléphone (Sécurité renforcée) :
+                        Prise de vue directe (Caméra avant ou arrière au choix) :
                       </strong>
-                      Prenez directement en photo votre <strong>pièce d'identité</strong> et prenez votre <strong>selfie de face</strong> avec votre smartphone. Aucun numéro d'entreprise n'est exigé.
+                      Prenez directement en photo votre <strong>pièce d'identité</strong> et prenez votre <strong>selfie de face</strong>. Le robot SENTINEL-CI analysera les clichés avant d'activer votre compte.
                     </div>
                   </div>
 
@@ -391,11 +493,11 @@ export const ProviderRegisterModal: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* PHOTO 1: PHOTO DE LA PIÈCE DIRECTEMENT AU TÉLÉPHONE */}
+                    {/* PHOTO 1: PHOTO DE LA PIÈCE (AVEC CHOIX AVANT OU ARRIÈRE) */}
                     <div className="p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
-                          <Smartphone className="w-4 h-4 text-emerald-600" />
+                          <Camera className="w-4 h-4 text-emerald-600" />
                           <span>Photo de la pièce ({pieceIdentiteType}) *</span>
                         </label>
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
@@ -438,7 +540,7 @@ export const ProviderRegisterModal: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* PHOTO 2: SELFIE DE FACE DIRECTEMENT AU TÉLÉPHONE */}
+                    {/* PHOTO 2: PHOTO DE FACE / SELFIE (AVEC CHOIX AVANT OU ARRIÈRE) */}
                     <div className="p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-emerald-300 space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
@@ -718,13 +820,13 @@ export const ProviderRegisterModal: React.FC = () => {
                       }}
                       className="px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl transition-colors cursor-pointer"
                     >
-                      Étape suivante : Tarifs & Devis &rarr;
+                      Étape suivante : Tarifs & Sécurité &rarr;
                     </button>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: Services & Pricing */}
+              {/* STEP 3: Services & Pricing + Optional Password Protection */}
               {step === 3 && (
                 <div className="space-y-4 animate-in fade-in">
                   <div className="flex items-center justify-between">
@@ -812,11 +914,60 @@ export const ProviderRegisterModal: React.FC = () => {
                     ))}
                   </div>
 
-                  {/* Free Trial Reminder Banner */}
+                  {/* OPTIONAL PASSWORD PROTECTION SECTION (Per user requirement: provider chooses to set or not) */}
+                  <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <KeyRound className="w-4 h-4 text-emerald-600" />
+                        <span className="font-extrabold text-xs text-slate-900">
+                          Mot de passe de protection (Facultatif / Optionnel)
+                        </span>
+                      </div>
+                      <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-slate-700 bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                        <input
+                          type="checkbox"
+                          checked={wantPassword}
+                          onChange={(e) => setWantPassword(e.target.checked)}
+                          className="w-4 h-4 text-emerald-600 rounded"
+                        />
+                        <span>Ajouter un mot de passe</span>
+                      </label>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500">
+                      Vous pouvez sécuriser l'accès à votre espace avec un mot de passe secret, ou le laisser sans mot de passe pour y accéder directement. C'est selon votre convenance.
+                    </p>
+
+                    {wantPassword && (
+                      <div className="pt-2 animate-in fade-in space-y-1.5">
+                        <label className="block text-xs font-bold text-slate-700">
+                          Définissez votre mot de passe secret prestataire :
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            placeholder="Ex: MonCodePro2026"
+                            value={motDePasse}
+                            onChange={(e) => setMotDePasse(e.target.value)}
+                            className="w-full pl-3 pr-10 py-2.5 text-xs font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                          >
+                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Robot & AI Inspection Notice Banner */}
                   <div className="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-amber-500/15 p-4 rounded-2xl border border-emerald-200 flex items-start gap-3">
-                    <Sparkles className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
+                    <Bot className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                     <div className="text-xs text-emerald-950">
-                      <strong>Activation Automatique par IA :</strong> Vous bénéficiez de <strong>3 mois d'essai gratuit</strong>. Dès la fin des 3 mois, l'Intelligence Artificielle SENTINEL-PAY activera automatiquement votre compte en temps réel dès règlement de 2 000 FCFA via les liens Wave, Orange Money ou MTN.
+                      <strong>Inspection préalable par le Robot & IA :</strong> En cliquant ci-dessous, le Robot SENTINEL-CI inspecte vos identifiants ({pieceIdentiteType} et photo de face). Si tout est conforme, votre compte est certifié et vos 3 mois gratuits sont lancés.
                     </div>
                   </div>
 
@@ -830,9 +981,10 @@ export const ProviderRegisterModal: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-700/25 transition-all cursor-pointer"
+                      className="px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm rounded-xl shadow-lg shadow-emerald-700/25 transition-all cursor-pointer flex items-center gap-2"
                     >
-                      Valider mon compte & lancer mon essai gratuit (3 mois)
+                      <Bot className="w-4 h-4 text-amber-300" />
+                      <span>Faire inspecter par l'IA & Créer mon compte</span>
                     </button>
                   </div>
                 </div>

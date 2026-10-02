@@ -21,6 +21,11 @@ import {
   AlertTriangle,
   Zap,
   User,
+  KeyRound,
+  Eye,
+  EyeOff,
+  Settings,
+  Bot,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -38,6 +43,7 @@ export const ProviderDashboard: React.FC = () => {
     deleteActivityPhotoFromProvider,
     toggleProviderTrialExpiry,
     autoActivateProviderWithPayment,
+    updateProviderPassword,
   } = useApp();
 
   // Selected current provider
@@ -49,6 +55,16 @@ export const ProviderDashboard: React.FC = () => {
     (q) => q.providerId === currentProvider.id || q.providerName === currentProvider.nomCommercial
   );
 
+  // Provider Password Unlock State
+  const [unlockedProviders, setUnlockedProviders] = useState<Record<string, boolean>>({});
+  const [providerPasswordInput, setProviderPasswordInput] = useState('');
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [showProviderPassword, setShowProviderPassword] = useState(false);
+
+  // Password Settings Modal
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
+  const [newPasswordValue, setNewPasswordValue] = useState('');
+
   // New Activity Photo Modal State
   const [isAddActivityOpen, setIsAddActivityOpen] = useState(false);
   const [newActivityTitre, setNewActivityTitre] = useState('');
@@ -58,9 +74,37 @@ export const ProviderDashboard: React.FC = () => {
     'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80'
   );
 
+  const isPasswordProtected = Boolean(currentProvider.motDePasse && currentProvider.motDePasse.trim().length > 0);
+  const isProviderUnlocked = !isPasswordProtected || Boolean(unlockedProviders[currentProvider.id]);
+
   const handleOpenPayment = () => {
     setPaymentTargetProvider(currentProvider);
     setIsPaymentModalOpen(true);
+  };
+
+  const handleUnlockWithPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (providerPasswordInput.trim() === currentProvider.motDePasse?.trim()) {
+      setUnlockedProviders((prev) => ({ ...prev, [currentProvider.id]: true }));
+      setPasswordError(null);
+      setProviderPasswordInput('');
+      confetti({
+        particleCount: 70,
+        spread: 60,
+        origin: { y: 0.6 },
+      });
+    } else {
+      setPasswordError('Mot de passe incorrect. Veuillez vérifier ou contacter l\'administrateur.');
+    }
+  };
+
+  const handleSavePasswordSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateProviderPassword(currentProvider.id, newPasswordValue.trim() || undefined);
+    setIsPasswordModalOpen(false);
+    setNewPasswordValue('');
+    // Ensure unlocked
+    setUnlockedProviders((prev) => ({ ...prev, [currentProvider.id]: true }));
   };
 
   const handleCreateActivity = (e: React.FormEvent) => {
@@ -92,7 +136,89 @@ export const ProviderDashboard: React.FC = () => {
     currentProvider.subscriptionStatus === 'expired' ||
     (!currentProvider.isTrialActive && currentProvider.subscriptionStatus !== 'active');
 
-  // If expired, show the strict Lock Screen as requested
+  // IF PASSWORD PROTECTED AND NOT UNLOCKED: Prompt for provider's password
+  if (!isProviderUnlocked) {
+    return (
+      <div className="max-w-md mx-auto px-4 py-16">
+        <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-8 text-center space-y-5">
+          <div className="w-16 h-16 bg-slate-900 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
+            <Lock className="w-8 h-8" />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-[11px] font-black text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded-full">
+              COMPTE PRO SÉCURISÉ
+            </span>
+            <h2 className="text-xl font-black text-slate-900">
+              {currentProvider.nomCommercial}
+            </h2>
+            <p className="text-xs text-slate-500">
+              Ce compte est protégé par un mot de passe secret configuré par le prestataire.
+            </p>
+          </div>
+
+          <form onSubmit={handleUnlockWithPassword} className="space-y-4 pt-2 text-left">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Mot de passe prestataire
+              </label>
+              <div className="relative">
+                <input
+                  type={showProviderPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Entrez votre mot de passe..."
+                  value={providerPasswordInput}
+                  onChange={(e) => {
+                    setProviderPasswordInput(e.target.value);
+                    if (passwordError) setPasswordError(null);
+                  }}
+                  className="w-full pl-3 pr-10 py-2.5 text-xs font-semibold bg-slate-50 border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowProviderPassword(!showProviderPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  {showProviderPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {passwordError && (
+              <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium">
+                {passwordError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer flex items-center justify-center gap-2"
+            >
+              <KeyRound className="w-4 h-4" />
+              <span>Déverrouiller mon espace</span>
+            </button>
+          </form>
+
+          <div className="pt-2 border-t border-slate-100 flex items-center justify-center gap-2 text-xs text-slate-400">
+            <span>Changer de compte :</span>
+            <select
+              value={currentProviderId}
+              onChange={(e) => setCurrentProviderId(e.target.value)}
+              className="font-bold text-slate-700 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs"
+            >
+              {providers.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.nomCommercial} {p.motDePasse ? '🔒' : '🔓'}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // IF EXPIRED: Show the strict Lock Screen with AI wording
   if (isExpired) {
     return (
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
@@ -192,7 +318,7 @@ export const ProviderDashboard: React.FC = () => {
               </span>
               <span className="inline-flex items-center gap-1 text-[11px] font-bold bg-emerald-500/40 px-2.5 py-0.5 rounded-lg border border-emerald-300/30">
                 <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-                <span>Pièce ({currentProvider.pieceIdentiteType || 'CNI'}) & Photo validées</span>
+                <span>Pièce ({currentProvider.pieceIdentiteType || 'CNI'}) & Photo validées par IA</span>
               </span>
             </div>
           </div>
@@ -236,10 +362,10 @@ export const ProviderDashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Switcher if multiple accounts */}
-      <div className="flex items-center justify-between text-xs bg-slate-50 p-3 rounded-2xl border border-slate-200">
+      {/* Switcher & Password Security Bar */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
         <div className="flex items-center gap-2">
-          <span className="font-bold text-slate-600">Compte prestataire actif :</span>
+          <span className="font-bold text-slate-600">Compte actif :</span>
           <select
             value={currentProviderId}
             onChange={(e) => setCurrentProviderId(e.target.value)}
@@ -247,22 +373,38 @@ export const ProviderDashboard: React.FC = () => {
           >
             {providers.map((p) => (
               <option key={p.id} value={p.id}>
-                {p.nomCommercial} — {p.profession} ({p.subscriptionStatus})
+                {p.nomCommercial} — {p.profession} ({p.motDePasse ? '🔒 Mot de passe' : '🔓 Accès libre'})
               </option>
             ))}
           </select>
         </div>
 
-        <button
-          onClick={() => setSelectedProvider(currentProvider)}
-          className="text-emerald-700 font-bold hover:underline cursor-pointer flex items-center gap-1"
-        >
-          <span>Voir ma vitrine telle que vue par les clients</span>
-          <ArrowRight className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-3">
+          {/* Password Security Config Button */}
+          <button
+            onClick={() => {
+              setNewPasswordValue(currentProvider.motDePasse || '');
+              setIsPasswordModalOpen(true);
+            }}
+            className="flex items-center gap-1.5 font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-2xs"
+          >
+            <KeyRound className="w-3.5 h-3.5 text-emerald-600" />
+            <span>
+              Sécurité : {isPasswordProtected ? '🔒 Protégé par mot de passe' : '🔓 Accès libre (Sans mot de passe)'}
+            </span>
+          </button>
+
+          <button
+            onClick={() => setSelectedProvider(currentProvider)}
+            className="text-emerald-700 font-bold hover:underline cursor-pointer flex items-center gap-1"
+          >
+            <span>Voir ma vitrine publique</span>
+            <ArrowRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
 
-      {/* SECTION CATALOGUE D'ACTIVITÉS & RÉALISATIONS (Crucial User Requirement) */}
+      {/* SECTION CATALOGUE D'ACTIVITÉS & RÉALISATIONS */}
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
         <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -297,7 +439,7 @@ export const ProviderDashboard: React.FC = () => {
               </p>
               <button
                 onClick={() => setIsAddActivityOpen(true)}
-                className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-colors"
+                className="px-4 py-2 bg-emerald-600 text-white font-bold text-xs rounded-xl hover:bg-emerald-700 transition-colors cursor-pointer"
               >
                 Ajouter ma première photo
               </button>
@@ -460,6 +602,61 @@ export const ProviderDashboard: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Modal: Password Settings (Optional password management) */}
+      {isPasswordModalOpen && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/75 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in">
+          <div className="relative w-full max-w-md bg-white rounded-3xl shadow-2xl p-6 border border-slate-100 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+              <h3 className="font-black text-base text-slate-900 flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-emerald-600" />
+                <span>Sécurité du compte prestataire</span>
+              </h3>
+              <button
+                onClick={() => setIsPasswordModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Vous pouvez définir un mot de passe pour protéger votre compte, ou laisser le champ vide pour un accès libre sans mot de passe.
+            </p>
+
+            <form onSubmit={handleSavePasswordSettings} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Mot de passe (Laissez vide pour désactiver le mot de passe)
+                </label>
+                <input
+                  type="text"
+                  placeholder="Ex: MonCodePro2026 (ou laissez vide)"
+                  value={newPasswordValue}
+                  onChange={(e) => setNewPasswordValue(e.target.value)}
+                  className="w-full px-3 py-2 text-xs font-semibold bg-white border border-slate-300 rounded-xl focus:outline-none focus:border-emerald-600"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsPasswordModalOpen(false)}
+                  className="px-4 py-2 border border-slate-200 text-slate-600 font-bold text-xs rounded-xl cursor-pointer"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl shadow-md transition-colors cursor-pointer"
+                >
+                  Enregistrer les paramètres
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Modal: Add New Activity Photo */}
       {isAddActivityOpen && (

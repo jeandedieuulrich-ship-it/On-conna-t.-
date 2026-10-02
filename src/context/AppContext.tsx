@@ -93,6 +93,7 @@ interface AppContextType {
   // Provider Catalog Activities
   addActivityPhotoToProvider: (providerId: string, photo: { titre: string; description: string; photoUrl: string; categorie?: string }) => void;
   deleteActivityPhotoFromProvider: (providerId: string, photoId: string) => void;
+  updateProviderPassword: (providerId: string, newPassword?: string) => void;
 
   submitQuoteRequest: (quote: Omit<QuoteRequest, 'id' | 'dateCreation' | 'statut'>) => void;
   updateQuoteStatus: (id: string, status: 'accepte' | 'refuse') => void;
@@ -443,6 +444,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       pieceIdentiteType: data.pieceIdentiteType || 'CNI',
       pieceIdentiteUrl: defaultDocPhoto,
       verificationStatus: 'pending',
+      motDePasse: data.motDePasse,
+      aiInspectionReport: data.aiInspectionReport,
       // 3 months free trial
       trialStartDate: now.toISOString().split('T')[0],
       trialEndDate: trialEnd.toISOString().split('T')[0],
@@ -585,6 +588,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
   };
 
+  const updateProviderPassword = (providerId: string, newPassword?: string) => {
+    setProviders((prev) =>
+      prev.map((p) =>
+        p.id === providerId
+          ? {
+              ...p,
+              motDePasse: newPassword && newPassword.trim() ? newPassword.trim() : undefined,
+            }
+          : p
+      )
+    );
+    addSecurityAuditLog(
+      'SECURITY_SCAN',
+      newPassword && newPassword.trim()
+        ? `Protection par mot de passe mise à jour pour le prestataire ${providerId}`
+        : `Mot de passe désactivé (accès direct) pour le prestataire ${providerId}`,
+      'info',
+      providerId
+    );
+  };
+
   const submitQuoteRequest = (quote: Omit<QuoteRequest, 'id' | 'dateCreation' | 'statut'>) => {
     const newQuote: QuoteRequest = {
       ...quote,
@@ -701,6 +725,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         toggleProviderTrialExpiry,
         addActivityPhotoToProvider,
         deleteActivityPhotoFromProvider,
+        updateProviderPassword,
         submitQuoteRequest,
         updateQuoteStatus,
         submitReport,

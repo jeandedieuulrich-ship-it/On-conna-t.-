@@ -130,7 +130,7 @@ export interface ActivityCatalogItem {
 export interface SecurityAuditLog {
   id: string;
   timestamp: string;
-  type: 'PROVIDER_REGISTRATION' | 'ID_VERIFICATION' | 'TRIAL_EXPIRY' | 'PAYMENT_ACTIVATION' | 'SECURITY_SCAN' | 'SUSPICIOUS_REPORT';
+  type: 'PROVIDER_REGISTRATION' | 'ID_VERIFICATION' | 'TRIAL_EXPIRY' | 'PAYMENT_ACTIVATION' | 'SECURITY_SCAN' | 'SUSPICIOUS_REPORT' | 'ADMIN_LOGIN' | 'AI_ID_INSPECTION';
   severity: 'info' | 'warning' | 'alert' | 'success';
   message: string;
   targetId?: string;
@@ -182,6 +182,13 @@ export interface ProviderItem {
   verificationStatus: 'verified' | 'pending' | 'rejected';
   verificationDocUrl?: string;
   aiVerificationNotes?: string;
+  motDePasse?: string; // Mot de passe optionnel configuré par le prestataire pour sécuriser son compte
+  aiInspectionReport?: {
+    date: string;
+    score: number;
+    verdict: 'approved' | 'review_required';
+    notes: string;
+  };
 
   // Subscription Details (3 months trial, then 2000 FCFA/month)
   trialStartDate: string;
