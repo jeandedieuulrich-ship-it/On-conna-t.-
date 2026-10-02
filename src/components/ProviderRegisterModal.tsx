@@ -40,9 +40,12 @@ export const ProviderRegisterModal: React.FC = () => {
   const [prenoms, setPrenoms] = useState('');
   const [pieceIdentiteType, setPieceIdentiteType] = useState<'CNI' | 'Permis' | 'Passeport'>('CNI');
   
-  // Direct Phone Camera Captures (Selfie & ID Photo - No URLs!)
+  // Direct Phone Camera Captures (Selfie & ID Photo Recto/Verso - No URLs!)
   const [pieceIdentiteUrl, setPieceIdentiteUrl] = useState<string | null>(
     'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80'
+  );
+  const [pieceIdentiteVersoUrl, setPieceIdentiteVersoUrl] = useState<string | null>(
+    'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80'
   );
   const [photoCreateurUrl, setPhotoCreateurUrl] = useState<string | null>(
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'
@@ -67,7 +70,7 @@ export const ProviderRegisterModal: React.FC = () => {
     initialFacing?: 'user' | 'environment';
     title: string;
     subtitle: string;
-    target: 'id' | 'creator' | 'profil' | 'activity';
+    target: 'id' | 'id_verso' | 'creator' | 'profil' | 'activity';
   }>({
     isOpen: false,
     mode: 'selfie',
@@ -116,7 +119,7 @@ export const ProviderRegisterModal: React.FC = () => {
   if (!isRegisterProviderOpen) return null;
 
   const openCamera = (
-    target: 'id' | 'creator' | 'profil' | 'activity',
+    target: 'id' | 'id_verso' | 'creator' | 'profil' | 'activity',
     preferredFacing: 'user' | 'environment' = target === 'creator' ? 'user' : 'environment'
   ) => {
     if (target === 'id') {
@@ -124,9 +127,18 @@ export const ProviderRegisterModal: React.FC = () => {
         isOpen: true,
         mode: 'document',
         initialFacing: preferredFacing,
-        title: `Photographier ma pièce (${pieceIdentiteType})`,
-        subtitle: `Prise de vue active : ${preferredFacing === 'user' ? 'Caméra Avant (Selfie)' : 'Caméra Arrière'}`,
+        title: `Photographier la face RECTO (Devant) de ma pièce (${pieceIdentiteType})`,
+        subtitle: `Cadrez la face avant bien nette • Prise de vue : ${preferredFacing === 'user' ? 'Caméra Avant' : 'Caméra Arrière'}`,
         target: 'id',
+      });
+    } else if (target === 'id_verso') {
+      setCameraModal({
+        isOpen: true,
+        mode: 'document',
+        initialFacing: preferredFacing,
+        title: `Photographier la face VERSO (Dos / Arrière) de ma pièce (${pieceIdentiteType})`,
+        subtitle: `Cadrez le dos de la pièce bien net • Prise de vue : ${preferredFacing === 'user' ? 'Caméra Avant' : 'Caméra Arrière'}`,
+        target: 'id_verso',
       });
     } else if (target === 'creator') {
       setCameraModal({
@@ -161,6 +173,8 @@ export const ProviderRegisterModal: React.FC = () => {
   const handleCaptureResult = (base64Image: string) => {
     if (cameraModal.target === 'id') {
       setPieceIdentiteUrl(base64Image);
+    } else if (cameraModal.target === 'id_verso') {
+      setPieceIdentiteVersoUrl(base64Image);
     } else if (cameraModal.target === 'creator') {
       setPhotoCreateurUrl(base64Image);
       if (!photoProfil || photoProfil.includes('unsplash')) {
@@ -209,6 +223,7 @@ export const ProviderRegisterModal: React.FC = () => {
         prenoms,
         pieceIdentiteType,
         pieceIdentiteUrl,
+        pieceIdentiteVersoUrl,
         photoCreateurUrl,
         nomCommercial: nomCommercial || `${prenoms} ${nomCivil}`,
         profession,
@@ -222,6 +237,7 @@ export const ProviderRegisterModal: React.FC = () => {
           prenoms,
           pieceIdentiteType,
           pieceIdentiteUrl: pieceIdentiteUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+          pieceIdentiteVersoUrl: pieceIdentiteVersoUrl || undefined,
           photoCreateurUrl: photoCreateurUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
           photoProfil: photoProfil || photoCreateurUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
           nomCommercial: nomCommercial || `${prenoms} ${nomCivil}`,
@@ -493,15 +509,15 @@ export const ProviderRegisterModal: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* PHOTO 1: PHOTO DE LA PIÈCE (AVEC CHOIX AVANT OU ARRIÈRE) */}
+                    {/* PHOTO 1A: FACE RECTO (DEVANT) DE LA PIÈCE */}
                     <div className="p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 space-y-3">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
                           <Camera className="w-4 h-4 text-emerald-600" />
-                          <span>Photo de la pièce ({pieceIdentiteType}) *</span>
+                          <span>1. Face RECTO (Devant) — {pieceIdentiteType} *</span>
                         </label>
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                          {pieceIdentiteUrl ? 'Photo prête ✅' : 'À prendre'}
+                          {pieceIdentiteUrl ? 'Recto prêt ✅' : 'À photographier'}
                         </span>
                       </div>
 
@@ -509,7 +525,7 @@ export const ProviderRegisterModal: React.FC = () => {
                         <div className="relative aspect-16/10 rounded-xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xs">
                           <img
                             src={pieceIdentiteUrl}
-                            alt="Pièce capturée"
+                            alt="Pièce Face Recto"
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -517,7 +533,7 @@ export const ProviderRegisterModal: React.FC = () => {
 
                       <div className="space-y-1.5">
                         <div className="text-[11px] text-slate-500 font-bold">
-                          Choisir la caméra :
+                          Prendre le Recto (Devant) :
                         </div>
                         <div className="grid grid-cols-2 gap-2">
                           <button
@@ -534,6 +550,53 @@ export const ProviderRegisterModal: React.FC = () => {
                             className="py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
                           >
                             <User className="w-4 h-4 text-emerald-400" />
+                            <span>🤳 Caméra Avant</span>
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* PHOTO 1B: FACE VERSO (DOS / ARRIÈRE) DE LA PIÈCE */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-amber-300 space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                          <Camera className="w-4 h-4 text-amber-600" />
+                          <span>2. Face VERSO (Dos / Arrière) — {pieceIdentiteType} *</span>
+                        </label>
+                        <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                          {pieceIdentiteVersoUrl ? 'Verso prêt ✅' : 'À photographier'}
+                        </span>
+                      </div>
+
+                      {pieceIdentiteVersoUrl && (
+                        <div className="relative aspect-16/10 rounded-xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xs">
+                          <img
+                            src={pieceIdentiteVersoUrl}
+                            alt="Pièce Face Verso"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      )}
+
+                      <div className="space-y-1.5">
+                        <div className="text-[11px] text-slate-500 font-bold">
+                          Prendre le Verso (Dos) :
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <button
+                            type="button"
+                            onClick={() => openCamera('id_verso', 'environment')}
+                            className="py-2.5 px-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <Camera className="w-4 h-4" />
+                            <span>📷 Caméra Arrière</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => openCamera('id_verso', 'user')}
+                            className="py-2.5 px-2 bg-slate-800 hover:bg-slate-700 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                          >
+                            <User className="w-4 h-4 text-amber-400" />
                             <span>🤳 Caméra Avant</span>
                           </button>
                         </div>
@@ -608,8 +671,8 @@ export const ProviderRegisterModal: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        if (!nomCivil || !prenoms || !telephone || !pieceIdentiteUrl || !photoCreateurUrl) {
-                          alert('Veuillez renseigner votre nom, prénoms, téléphone ainsi que la photo de pièce et votre selfie de face.');
+                        if (!nomCivil || !prenoms || !telephone || !pieceIdentiteUrl || !pieceIdentiteVersoUrl || !photoCreateurUrl) {
+                          alert(`Veuillez renseigner votre nom, prénoms, numéro de téléphone, ainsi que la photo RECTO (Devant) et VERSO (Dos) de votre ${pieceIdentiteType} et votre selfie de face.`);
                           return;
                         }
                         setStep(2);

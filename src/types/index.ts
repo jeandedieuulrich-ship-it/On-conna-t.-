@@ -178,7 +178,8 @@ export interface ProviderItem {
   prenoms?: string;
   dateNaissance?: string;
   pieceIdentiteType?: 'CNI' | 'Permis' | 'Passeport' | 'Attestation';
-  pieceIdentiteUrl?: string; // Photo de la pièce d'identité (CNI, Permis, Passeport)
+  pieceIdentiteUrl?: string; // Photo de la pièce d'identité Face RECTO (CNI, Permis, Passeport)
+  pieceIdentiteVersoUrl?: string; // Photo de la pièce d'identité Face VERSO (CNI, Permis)
   verificationStatus: 'verified' | 'pending' | 'rejected';
   verificationDocUrl?: string;
   aiVerificationNotes?: string;

@@ -443,6 +443,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       dateNaissance: data.dateNaissance,
       pieceIdentiteType: data.pieceIdentiteType || 'CNI',
       pieceIdentiteUrl: defaultDocPhoto,
+      pieceIdentiteVersoUrl: data.pieceIdentiteVersoUrl,
       verificationStatus: 'pending',
       motDePasse: data.motDePasse,
       aiInspectionReport: data.aiInspectionReport,

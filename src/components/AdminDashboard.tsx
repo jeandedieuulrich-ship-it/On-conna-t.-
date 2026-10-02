@@ -773,20 +773,35 @@ export const AdminDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  {/* Photo Verification Panel (ID document photo + Creator face photo) */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
-                    {/* ID Document Photo Preview */}
+                  {/* Photo Verification Panel (ID RECTO + VERSO + Creator face photo) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-slate-50 rounded-2xl border border-slate-200">
+                    {/* ID Document Photo RECTO */}
                     <div className="flex items-center gap-3">
                       <img
                         src={p.pieceIdentiteUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80'}
-                        alt="Photo pièce"
+                        alt="Photo pièce Recto"
                         className="w-16 h-12 rounded-lg object-cover border border-slate-300 shadow-2xs shrink-0 cursor-pointer hover:scale-105 transition-transform"
                       />
                       <div className="text-xs">
                         <span className="font-bold text-slate-800 block">
-                          Photo de la pièce ({p.pieceIdentiteType || 'CNI'})
+                          Face RECTO ({p.pieceIdentiteType || 'CNI'})
                         </span>
-                        <span className="text-[11px] text-slate-500">Document d'identité officiel</span>
+                        <span className="text-[10px] text-emerald-700 font-semibold">Devant de la pièce</span>
+                      </div>
+                    </div>
+
+                    {/* ID Document Photo VERSO */}
+                    <div className="flex items-center gap-3">
+                      <img
+                        src={p.pieceIdentiteVersoUrl || 'https://images.unsplash.com/photo-1589829545856-d10d557cf95f?auto=format&fit=crop&w=600&q=80'}
+                        alt="Photo pièce Verso"
+                        className="w-16 h-12 rounded-lg object-cover border border-amber-300 shadow-2xs shrink-0 cursor-pointer hover:scale-105 transition-transform"
+                      />
+                      <div className="text-xs">
+                        <span className="font-bold text-slate-800 block">
+                          Face VERSO ({p.pieceIdentiteType || 'CNI'})
+                        </span>
+                        <span className="text-[10px] text-amber-700 font-semibold">Dos / Arrière de la pièce</span>
                       </div>
                     </div>
 
@@ -799,9 +814,9 @@ export const AdminDashboard: React.FC = () => {
                       />
                       <div className="text-xs">
                         <span className="font-bold text-slate-800 block">
-                          Photo de face du créateur
+                          Photo de face (Selfie)
                         </span>
-                        <span className="text-[11px] text-slate-500">Concordance faciale biométrique</span>
+                        <span className="text-[10px] text-slate-500">Concordance biométrique</span>
                       </div>
                     </div>
                   </div>
