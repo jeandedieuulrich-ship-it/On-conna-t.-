@@ -10,6 +10,7 @@ import {
   CheckCircle,
   XCircle,
   Eye,
+  EyeOff,
   Trash2,
   Lock,
   UserCheck,
@@ -23,8 +24,15 @@ import {
   Sparkles,
   LockKeyhole,
   Check,
+  Radio,
+  Clock,
+  LogOut,
+  Smartphone,
+  KeyRound,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+const MASTER_PASSWORD = 'SIADE1';
 
 export const AdminDashboard: React.FC = () => {
   const {
@@ -41,12 +49,21 @@ export const AdminDashboard: React.FC = () => {
     reports,
     updateReportStatus,
     payments,
+    quotes,
     confirmPaymentByAdmin,
     setSelectedEvent,
     setSelectedProvider,
   } = useApp();
 
-  const [adminTab, setAdminTab] = useState<'sentinel' | 'providers' | 'events' | 'payments' | 'reports'>('sentinel');
+  // Authentication Lock State (Exclusive to Ulrich, his Robot & AI)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    return localStorage.getItem('onconnait_admin_authenticated') === 'true';
+  });
+  const [passwordInput, setPasswordInput] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+
+  const [adminTab, setAdminTab] = useState<'sentinel' | 'activities' | 'providers' | 'events' | 'payments' | 'reports'>('sentinel');
 
   // AI Chat with Ulrich
   const [aiInput, setAiInput] = useState('');
@@ -56,11 +73,132 @@ export const AdminDashboard: React.FC = () => {
   >([
     {
       sender: 'sentinel',
-      text: `Bonjour Super-Administrateur Ulrich ! Je suis SENTINEL-CI, votre robot d'intelligence artificielle et de co-gestion. La plateforme est sous surveillance active 24h/24. Que souhaitez-vous analyser ou configurer aujourd'hui ?`,
+      text: `Bonjour Super-Administrateur Ulrich ! Je suis SENTINEL-CI, votre robot d'intelligence artificielle et de co-gestion exclusive. La plateforme est sous surveillance active 24h/24. Que souhaitez-vous analyser ou superviser aujourd'hui ?`,
       time: 'Maintenant',
     },
   ]);
 
+  const handleLoginSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (passwordInput.trim() === MASTER_PASSWORD) {
+      setIsAuthenticated(true);
+      localStorage.setItem('onconnait_admin_authenticated', 'true');
+      setAuthError(null);
+      setPasswordInput('');
+
+      addSecurityAuditLog(
+        'ADMIN_LOGIN',
+        'Connexion sécurisée d\'Ulrich Jean-Dieu validée avec le code maître SIADE1',
+        'success'
+      );
+
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+      });
+    } else {
+      setAuthError('Mot de passe incorrect. Seul Ulrich Jean-Dieu et son robot IA ont accès à cet espace.');
+      addSecurityAuditLog(
+        'SECURITY_ALERT',
+        'Tentative de déverrouillage de l\'espace administrateur avec un mot de passe invalide',
+        'alert'
+      );
+    }
+  };
+
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('onconnait_admin_authenticated');
+    addSecurityAuditLog('ADMIN_LOGIN', 'Déconnexion et verrouillage de la console administrateur', 'info');
+  };
+
+  // If not authenticated, render the impenetrable Lock Screen for Ulrich
+  if (!isAuthenticated) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-16">
+        <div className="bg-slate-950 rounded-3xl border border-emerald-500/30 shadow-2xl p-6 sm:p-10 text-white relative overflow-hidden">
+          {/* Cyber Glow Accents */}
+          <div className="absolute -top-24 -right-24 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute -bottom-24 -left-24 w-48 h-48 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="text-center space-y-4">
+            <div className="w-20 h-20 bg-emerald-500/15 border-2 border-emerald-400 text-emerald-400 rounded-3xl flex items-center justify-center mx-auto shadow-lg shadow-emerald-500/20">
+              <LockKeyhole className="w-10 h-10" />
+            </div>
+
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-black border border-emerald-500/40">
+              <Bot className="w-3.5 h-3.5" />
+              <span>ESPACE ADMINISTRATEUR SÉCURISÉ</span>
+            </div>
+
+            <h1 className="text-2xl sm:text-3xl font-black">
+              Accès Exclusif : Ulrich & Robot IA
+            </h1>
+
+            <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+              Cet espace est strictement réservé à <strong>Ulrich Jean-Dieu</strong> et à son <strong>Intelligence Artificielle SENTINEL-CI</strong> pour la surveillance totale de la plateforme ON CONNAÎT 🇨🇮.
+            </p>
+          </div>
+
+          <form onSubmit={handleLoginSubmit} className="mt-8 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                Mot de passe administrateur
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                  <KeyRound className="w-4 h-4 text-emerald-400" />
+                </div>
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  required
+                  placeholder="Entrez le mot de passe secret..."
+                  value={passwordInput}
+                  onChange={(e) => {
+                    setPasswordInput(e.target.value);
+                    if (authError) setAuthError(null);
+                  }}
+                  className="w-full pl-10 pr-11 py-3 text-sm font-semibold bg-slate-900 border border-slate-700 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-slate-400 hover:text-white cursor-pointer"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+
+            {authError && (
+              <div className="p-3 bg-rose-500/20 border border-rose-500/40 rounded-xl text-xs text-rose-300 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4 shrink-0 text-rose-400" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="w-full py-3.5 px-4 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm rounded-2xl shadow-xl shadow-emerald-700/25 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>Déverrouiller la Console Administrateur</span>
+            </button>
+          </form>
+
+          <div className="mt-6 pt-5 border-t border-slate-800 text-center">
+            <span className="text-[11px] text-slate-400 flex items-center justify-center gap-1.5">
+              <Bot className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Robot SENTINEL-CI en veille sécurisée • Chiffrement 256 bits</span>
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Pending items counts
   const pendingEvents = events.filter((e) => e.statut === 'en_attente');
   const pendingProviders = providers.filter((p) => p.verificationStatus === 'pending');
   const pendingReports = reports.filter((r) => r.statut === 'nouveau');
@@ -69,6 +207,11 @@ export const AdminDashboard: React.FC = () => {
   const expiredProvidersCount = providers.filter(
     (p) => p.subscriptionStatus === 'expired' || (!p.isTrialActive && p.subscriptionStatus !== 'active')
   ).length;
+
+  const totalCatalogPhotos = providers.reduce(
+    (sum, p) => sum + (p.catalogPhotos?.length || 0),
+    0
+  );
 
   const handleSendAiMessage = async (queryText?: string) => {
     const textToSend = queryText || aiInput;
@@ -134,43 +277,52 @@ export const AdminDashboard: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Super-Administrator & AI Sentinel Header */}
-      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-emerald-900/40">
+      {/* Super-Administrator & AI Sentinel Header with Logout Button */}
+      <div className="bg-gradient-to-r from-slate-950 via-slate-900 to-emerald-950 rounded-3xl p-6 sm:p-8 text-white shadow-2xl flex flex-col md:flex-row md:items-center justify-between gap-6 border border-emerald-900/40 relative">
         <div>
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400 text-slate-950 text-xs font-black shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5" />
-              <span>SUPER-ADMINISTRATEUR OFFICIEL</span>
+              <span>CONSOLE EXCLUSIVE ULRICH JEAN-DIEU</span>
             </span>
             <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 text-xs font-bold border border-emerald-500/30">
               <Bot className="w-3.5 h-3.5" />
-              <span>ROBOT IA SENTINEL-CI CONNECTÉ</span>
+              <span>ROBOT SENTINEL-CI & IA ACTIFS</span>
             </span>
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-black">
-            Console de Co-Gestion : {adminProfile.nom}
+            Surveillance Totale de l'Application
           </h1>
 
           <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            Email : <strong className="text-emerald-400 font-mono">{adminProfile.email}</strong> • Surveillance continue anti-fraude, vérification de pièces et contrôle strict des expirations.
+            Connecté en tant que <strong className="text-emerald-400">{adminProfile.nom}</strong> ({adminProfile.email}) • Session protégée par mot de passe maître.
           </p>
         </div>
 
-        {/* Global Security Metrics */}
-        <div className="flex items-center gap-2.5">
-          <div className="bg-white/10 px-3.5 py-2.5 rounded-2xl text-center border border-white/10">
-            <div className="text-lg font-black text-emerald-400">{providers.length}</div>
+        {/* Global Security Metrics & Logout */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="bg-white/10 px-3 py-2 rounded-2xl text-center border border-white/10">
+            <div className="text-base font-black text-emerald-400">{providers.length}</div>
             <div className="text-[10px] text-slate-300">Prestataires</div>
           </div>
-          <div className="bg-white/10 px-3.5 py-2.5 rounded-2xl text-center border border-white/10">
-            <div className="text-lg font-black text-rose-400">{expiredProvidersCount}</div>
-            <div className="text-[10px] text-slate-300">Bloqués (Expirés)</div>
+          <div className="bg-white/10 px-3 py-2 rounded-2xl text-center border border-white/10">
+            <div className="text-base font-black text-rose-400">{expiredProvidersCount}</div>
+            <div className="text-[10px] text-slate-300">Bloqués</div>
           </div>
-          <div className="bg-white/10 px-3.5 py-2.5 rounded-2xl text-center border border-white/10">
-            <div className="text-lg font-black text-amber-400">{events.length}</div>
+          <div className="bg-white/10 px-3 py-2 rounded-2xl text-center border border-white/10">
+            <div className="text-base font-black text-amber-400">{events.length}</div>
             <div className="text-[10px] text-slate-300">Événements</div>
           </div>
+
+          <button
+            onClick={handleLogout}
+            className="p-2.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 border border-rose-500/40 rounded-2xl transition-colors cursor-pointer flex items-center gap-1.5 text-xs font-bold"
+            title="Verrouiller la session (Exige le mot de passe SIADE1 pour réaccéder)"
+          >
+            <LogOut className="w-4 h-4" />
+            <span className="hidden sm:inline">Verrouiller</span>
+          </button>
         </div>
       </div>
 
@@ -190,6 +342,21 @@ export const AdminDashboard: React.FC = () => {
         </button>
 
         <button
+          onClick={() => setAdminTab('activities')}
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
+            adminTab === 'activities'
+              ? 'bg-amber-600 text-white shadow-sm'
+              : 'text-slate-600 hover:bg-slate-100'
+          }`}
+        >
+          <Radio className="w-4 h-4" />
+          <span>Surveillance Globale des Activités 📡</span>
+          <span className="bg-amber-300 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-black">
+            Direct
+          </span>
+        </button>
+
+        <button
           onClick={() => setAdminTab('providers')}
           className={`px-4 py-2.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-2 ${
             adminTab === 'providers'
@@ -198,7 +365,7 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           <Briefcase className="w-4 h-4" />
-          <span>Prestataires & Identités (CNI/Permis/Photos)</span>
+          <span>Prestataires & Identités (Caméra)</span>
           {pendingProviders.length > 0 && (
             <span className="bg-amber-400 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-black">
               {pendingProviders.length}
@@ -232,7 +399,7 @@ export const AdminDashboard: React.FC = () => {
           }`}
         >
           <CreditCard className="w-4 h-4" />
-          <span>Paiements Liens Mobile Money</span>
+          <span>Paiements Liens & IA Réactivation</span>
           {pendingPayments.length > 0 && (
             <span className="bg-amber-400 text-slate-900 text-[10px] px-1.5 py-0.2 rounded-full font-black">
               {pendingPayments.length}
@@ -269,7 +436,7 @@ export const AdminDashboard: React.FC = () => {
                 <span>Supervision Automatique Active</span>
               </div>
               <p className="text-xs text-slate-600 mt-0.5">
-                Le Robot Sentinelle surveille les nouveaux comptes, les photos de pièces et bloque automatiquement les accès dès expiration des 3 mois.
+                Le Robot Sentinelle surveille les photos prises, les inscriptions, et bloque automatiquement les accès dès expiration des 3 mois.
               </p>
             </div>
 
@@ -368,7 +535,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="p-3 bg-white border-t border-slate-200 flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Donnez une consigne à SENTINEL-CI (ex: 'Fais un rapport de sécurité', 'Analyse les prestataires')..."
+                  placeholder="Donnez une consigne à SENTINEL-CI..."
                   value={aiInput}
                   onChange={(e) => setAiInput(e.target.value)}
                   onKeyDown={(e) => {
@@ -391,7 +558,7 @@ export const AdminDashboard: React.FC = () => {
               <div className="p-4 bg-slate-900 text-white flex items-center justify-between">
                 <div className="font-extrabold text-xs flex items-center gap-1.5">
                   <Activity className="w-4 h-4 text-emerald-400" />
-                  <span>Journal de Surveillance en Temps Réel</span>
+                  <span>Journal de Surveillance en Direct</span>
                 </div>
                 <span className="text-[10px] bg-white/10 px-2 py-0.5 rounded-full text-slate-300">
                   {auditLogs.length} événements
@@ -430,7 +597,96 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 2: PRESTATAIRES & PHOTO IDENTITY VERIFICATION */}
+      {/* TAB 2: SURVEILLANCE GLOBALE DES ACTIVITÉS EN DIRECT 📡 */}
+      {adminTab === 'activities' && (
+        <div className="space-y-6 animate-in fade-in">
+          {/* Live Activity Metrics Grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-slate-500 font-bold">Prestataires enregistrés</span>
+              <div className="text-2xl font-black text-slate-900 mt-1">{providers.length}</div>
+              <span className="text-[11px] text-emerald-600 font-semibold">Tous sous surveillance IA</span>
+            </div>
+
+            <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-slate-500 font-bold">Photos de Catalogues</span>
+              <div className="text-2xl font-black text-amber-600 mt-1">{totalCatalogPhotos}</div>
+              <span className="text-[11px] text-slate-500 font-semibold">Réalisations publiées</span>
+            </div>
+
+            <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-slate-500 font-bold">Demandes de devis</span>
+              <div className="text-2xl font-black text-emerald-700 mt-1">{quotes.length}</div>
+              <span className="text-[11px] text-slate-500 font-semibold">Flux clients actifs</span>
+            </div>
+
+            <div className="p-4 bg-white rounded-3xl border border-slate-200 shadow-2xs">
+              <span className="text-xs text-slate-500 font-bold">Paiements Mobile Money</span>
+              <div className="text-2xl font-black text-teal-600 mt-1">{payments.length}</div>
+              <span className="text-[11px] text-emerald-600 font-semibold">Activés par IA</span>
+            </div>
+          </div>
+
+          {/* Activity Live Feed */}
+          <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
+            <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+                  <Radio className="w-5 h-5 text-amber-500 animate-pulse" />
+                  <span>Flux d'Activités en Temps Réel sur ON CONNAÎT 🇨🇮</span>
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Toutes les actions réalisées par les utilisateurs et les prestataires sont enregistrées et surveillées par l'IA.
+                </p>
+              </div>
+
+              <span className="text-xs font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                Surveillance 24/7 Connectée
+              </span>
+            </div>
+
+            <div className="divide-y divide-slate-100">
+              {auditLogs.map((item) => (
+                <div key={item.id} className="p-4 sm:p-5 flex items-start gap-3 hover:bg-slate-50 transition-colors">
+                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center shrink-0 mt-0.5 ${
+                    item.severity === 'success'
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : item.severity === 'warning'
+                      ? 'bg-amber-100 text-amber-800'
+                      : item.severity === 'alert'
+                      ? 'bg-rose-100 text-rose-700'
+                      : 'bg-slate-100 text-slate-700'
+                  }`}>
+                    {item.type === 'PAYMENT_ACTIVATION' ? (
+                      <CreditCard className="w-4 h-4" />
+                    ) : item.type === 'PROVIDER_REGISTRATION' ? (
+                      <Camera className="w-4 h-4" />
+                    ) : item.type === 'ID_VERIFICATION' ? (
+                      <ShieldCheck className="w-4 h-4" />
+                    ) : (
+                      <Bot className="w-4 h-4" />
+                    )}
+                  </div>
+
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs font-black text-slate-900">{item.message}</span>
+                      <span className="text-[10px] font-mono text-slate-400 shrink-0">{item.timestamp}</span>
+                    </div>
+                    {item.aiNotes && (
+                      <p className="text-[11px] text-emerald-700 italic mt-0.5">
+                        🤖 {item.aiNotes}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TAB 3: PRESTATAIRES & PHOTO IDENTITY VERIFICATION */}
       {adminTab === 'providers' && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
           <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
@@ -440,7 +696,7 @@ export const AdminDashboard: React.FC = () => {
                 <span>Contrôle des Prestataires & Identités ({providers.length})</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Vérification des photos de CNI, Permis, Passeport et photo de face du créateur (sans numéro d'entreprise).
+                Vérification des photos de CNI, Permis, Passeport et photo de face du créateur (prise avec caméra avant ou arrière).
               </p>
             </div>
           </div>
@@ -601,7 +857,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 3: ÉVÉNEMENTS */}
+      {/* TAB 4: ÉVÉNEMENTS */}
       {adminTab === 'events' && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
           <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
@@ -658,17 +914,17 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 4: PAIEMENTS MOBILE MONEY (NO PHONE NUMBERS DISPLAYED) */}
+      {/* TAB 5: PAIEMENTS MOBILE MONEY (NO PHONE NUMBERS DISPLAYED, AUTO AI ACTIVATION) */}
       {adminTab === 'payments' && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
           <div className="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between">
             <div>
               <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-teal-600" />
-                <span>Transactions & Activations Automatiques ({payments.length})</span>
+                <span>Transactions & Activations Automatiques par IA ({payments.length})</span>
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Règlements effectués exclusivement par liens sécurisés Wave, Orange Money ou MTN Mobile Money.
+                Règlements Wave, Orange Money et MTN MoMo validés et débloqués par l'IA SENTINEL-PAY.
               </p>
             </div>
           </div>
@@ -680,7 +936,7 @@ export const AdminDashboard: React.FC = () => {
                   <div className="flex items-center gap-2">
                     <span className="font-black text-sm text-slate-900">{pay.providerName}</span>
                     <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-md">
-                      {pay.operateur} (Lien Web)
+                      {pay.operateur} (Lien Web Direct)
                     </span>
                   </div>
                   <div className="text-xs text-slate-500 mt-0.5">
@@ -692,8 +948,9 @@ export const AdminDashboard: React.FC = () => {
                   <span className="text-sm font-black text-slate-900">
                     {pay.montantFCFA.toLocaleString('fr-FR')} FCFA
                   </span>
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200">
-                    Compte Débloqué Automatiquement ⚡
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-xl border border-emerald-200 flex items-center gap-1">
+                    <Zap className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Réactivé par IA ⚡</span>
                   </span>
                 </div>
               </div>
@@ -702,7 +959,7 @@ export const AdminDashboard: React.FC = () => {
         </div>
       )}
 
-      {/* TAB 5: SIGNALEMENTS */}
+      {/* TAB 6: SIGNALEMENTS */}
       {adminTab === 'reports' && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-2xs overflow-hidden">
           <div className="p-5 sm:p-6 border-b border-slate-100">
