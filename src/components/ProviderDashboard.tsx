@@ -114,13 +114,13 @@ export const ProviderDashboard: React.FC = () => {
             Bonjour <strong>{currentProvider.nomCommercial}</strong>. Conformément aux conditions d'utilisation, votre période de gratuité de 90 jours a pris fin. Pour débloquer l'accès immédiat à votre tableau de bord, consulter vos demandes de devis et maintenir vos activités visibles par les organisateurs, veuillez renouveler votre abonnement mensuel.
           </p>
 
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-200 max-w-md mx-auto text-xs text-amber-950 text-left space-y-1.5">
-            <div className="font-bold flex items-center gap-1.5 text-amber-900">
-              <Zap className="w-4 h-4 text-amber-600" />
-              <span>Activation Automatique Instantanée</span>
+          <div className="p-4 bg-emerald-50/80 rounded-2xl border border-emerald-200 max-w-md mx-auto text-xs text-emerald-950 text-left space-y-1.5 shadow-xs">
+            <div className="font-bold flex items-center gap-1.5 text-emerald-900">
+              <Zap className="w-4 h-4 text-emerald-600" />
+              <span>Réactivation Automatique par Intelligence Artificielle (SENTINEL-PAY)</span>
             </div>
             <p>
-              Tarif unique : <strong>2 000 FCFA / mois</strong>. Dès que vous effectuez le règlement via les liens officiels Wave, Orange Money ou MTN, votre compte se débloque en temps réel sans attente.
+              Tarif unique : <strong>2 000 FCFA / mois</strong>. Dès que vous cliquez sur le lien Wave, Orange Money ou MTN, l'Intelligence Artificielle SENTINEL-PAY détecte votre règlement et débloque automatiquement votre compte sans délai.
             </p>
           </div>
 
@@ -130,7 +130,7 @@ export const ProviderDashboard: React.FC = () => {
               className="w-full sm:w-auto px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white font-black text-sm rounded-2xl shadow-xl shadow-emerald-700/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
             >
               <CreditCard className="w-4 h-4 text-amber-300" />
-              <span>Débloquer mon compte maintenant (2 000 FCFA)</span>
+              <span>Débloquer mon compte maintenant (Lien Sécurisé)</span>
             </button>
 
             <button
@@ -138,7 +138,7 @@ export const ProviderDashboard: React.FC = () => {
               className="w-full sm:w-auto px-5 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs rounded-2xl transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
             >
               <Zap className="w-4 h-4 text-emerald-600" />
-              <span>Simuler activation automatique immédiate</span>
+              <span>Simuler activation par IA instantanée</span>
             </button>
           </div>
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { PROVIDER_CATEGORIES, CITIES_CI, COMMUNES_ABIDJAN } from '../data/mockData';
 import { ProviderCategory, ProviderService } from '../types';
+import { CameraCaptureModal } from './CameraCaptureModal';
 import {
   X,
   ShieldCheck,
@@ -12,9 +13,10 @@ import {
   Plus,
   Trash2,
   Camera,
-  Upload,
   User,
   Image as ImageIcon,
+  Smartphone,
+  RefreshCw,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -28,21 +30,36 @@ export const ProviderRegisterModal: React.FC = () => {
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
-  // Identity Verification Fields (Strict adherence to user requirements: NO company number, NO creation date)
+  // Identity Verification Fields (NO enterprise number, NO creation date)
   const [nomCivil, setNomCivil] = useState('');
   const [prenoms, setPrenoms] = useState('');
   const [pieceIdentiteType, setPieceIdentiteType] = useState<'CNI' | 'Permis' | 'Passeport'>('CNI');
   
-  // Mandatory Photos: ID document, Creator face photo, Profile photo
-  const [pieceIdentiteUrl, setPieceIdentiteUrl] = useState(
+  // Direct Phone Camera Captures (Selfie & ID Photo - No URLs!)
+  const [pieceIdentiteUrl, setPieceIdentiteUrl] = useState<string | null>(
     'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80'
   );
-  const [photoCreateurUrl, setPhotoCreateurUrl] = useState(
+  const [photoCreateurUrl, setPhotoCreateurUrl] = useState<string | null>(
     'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80'
   );
-  const [photoProfil, setPhotoProfil] = useState(
+  const [photoProfil, setPhotoProfil] = useState<string | null>(
     'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80'
   );
+
+  // Camera Modal Controller
+  const [cameraModal, setCameraModal] = useState<{
+    isOpen: boolean;
+    mode: 'selfie' | 'document';
+    title: string;
+    subtitle: string;
+    target: 'id' | 'creator' | 'profil' | 'activity';
+  }>({
+    isOpen: false,
+    mode: 'selfie',
+    title: '',
+    subtitle: '',
+    target: 'creator',
+  });
 
   // Public Professional Vitrine Fields
   const [nomCommercial, setNomCommercial] = useState('');
@@ -62,7 +79,7 @@ export const ProviderRegisterModal: React.FC = () => {
   // Initial Activity Photo for the new Catalog
   const [initialActivityTitre, setInitialActivityTitre] = useState('Prestation récente en Côte d\'Ivoire');
   const [initialActivityDesc, setInitialActivityDesc] = useState('Exemple de réalisation professionnelle pour nos clients.');
-  const [initialActivityPhoto, setInitialActivityPhoto] = useState(
+  const [initialActivityPhoto, setInitialActivityPhoto] = useState<string | null>(
     'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80'
   );
 
@@ -81,6 +98,57 @@ export const ProviderRegisterModal: React.FC = () => {
   const [isSuccess, setIsSuccess] = useState(false);
 
   if (!isRegisterProviderOpen) return null;
+
+  const openCamera = (target: 'id' | 'creator' | 'profil' | 'activity') => {
+    if (target === 'id') {
+      setCameraModal({
+        isOpen: true,
+        mode: 'document',
+        title: `Photographier ma pièce (${pieceIdentiteType})`,
+        subtitle: 'Prenez la photo recto bien cadrée avec la caméra de votre téléphone',
+        target: 'id',
+      });
+    } else if (target === 'creator') {
+      setCameraModal({
+        isOpen: true,
+        mode: 'selfie',
+        title: 'Prendre mon Selfie de face en direct',
+        subtitle: 'Cadrez votre visage de face avec la caméra frontale pour certifier votre compte',
+        target: 'creator',
+      });
+    } else if (target === 'profil') {
+      setCameraModal({
+        isOpen: true,
+        mode: 'selfie',
+        title: 'Photo de profil public',
+        subtitle: 'Prenez la photo qui apparaîtra sur votre vitrine',
+        target: 'profil',
+      });
+    } else {
+      setCameraModal({
+        isOpen: true,
+        mode: 'document',
+        title: 'Photo de réalisation pour le catalogue',
+        subtitle: 'Photographiez votre matériel, votre stand ou une activité récente',
+        target: 'activity',
+      });
+    }
+  };
+
+  const handleCaptureResult = (base64Image: string) => {
+    if (cameraModal.target === 'id') {
+      setPieceIdentiteUrl(base64Image);
+    } else if (cameraModal.target === 'creator') {
+      setPhotoCreateurUrl(base64Image);
+      if (!photoProfil || photoProfil.includes('unsplash')) {
+        setPhotoProfil(base64Image);
+      }
+    } else if (cameraModal.target === 'profil') {
+      setPhotoProfil(base64Image);
+    } else if (cameraModal.target === 'activity') {
+      setInitialActivityPhoto(base64Image);
+    }
+  };
 
   const handleAddService = () => {
     setServices((prev) => [
@@ -114,9 +182,9 @@ export const ProviderRegisterModal: React.FC = () => {
       nomCivil,
       prenoms,
       pieceIdentiteType,
-      pieceIdentiteUrl,
-      photoCreateurUrl,
-      photoProfil,
+      pieceIdentiteUrl: pieceIdentiteUrl || 'https://images.unsplash.com/photo-1544717305-2782549b5136?auto=format&fit=crop&w=600&q=80',
+      photoCreateurUrl: photoCreateurUrl || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=600&q=80',
+      photoProfil: photoProfil || photoCreateurUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=600&q=80',
       nomCommercial: nomCommercial || `${prenoms} ${nomCivil}`,
       profession,
       domaine: domaine || `${profession} en Côte d'Ivoire`,
@@ -136,7 +204,7 @@ export const ProviderRegisterModal: React.FC = () => {
           id: `act-${Date.now()}-1`,
           titre: initialActivityTitre || 'Activité inaugurale',
           description: initialActivityDesc || 'Réalisation d\'excellence en Côte d\'Ivoire.',
-          photoUrl: initialActivityPhoto || photoProfil,
+          photoUrl: initialActivityPhoto || photoProfil || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
           date: new Date().toISOString().split('T')[0],
           categorie: profession,
         },
@@ -145,7 +213,7 @@ export const ProviderRegisterModal: React.FC = () => {
         {
           id: 'port-sample-1',
           type: 'photo',
-          url: initialActivityPhoto || photoProfil,
+          url: initialActivityPhoto || photoProfil || 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80',
           titre: initialActivityTitre || 'Réalisation inaugurale',
         },
       ],
@@ -153,8 +221,8 @@ export const ProviderRegisterModal: React.FC = () => {
 
     setIsSuccess(true);
     confetti({
-      particleCount: 100,
-      spread: 75,
+      particleCount: 110,
+      spread: 80,
       origin: { y: 0.6 },
     });
   };
@@ -180,7 +248,7 @@ export const ProviderRegisterModal: React.FC = () => {
             Rejoindre les Prestataires ON CONNAÎT 🇨🇮
           </h2>
           <p className="text-xs sm:text-sm text-emerald-100 mt-1 max-w-xl">
-            Vérification par pièce d'identité (CNI, Permis ou Passeport) et photo de face. Sans numéro d'entreprise ni date de création.
+            Prenez votre selfie et la photo de votre pièce directement au téléphone. Sans numéro d'entreprise.
           </p>
 
           {/* Stepper */}
@@ -190,7 +258,7 @@ export const ProviderRegisterModal: React.FC = () => {
                 step === 1 ? 'bg-white text-emerald-800' : 'bg-white/20 text-white'
               }`}
             >
-              1. Identité & Photos 🪪
+              1. Pièce & Selfie 🤳
             </span>
             <span>&rarr;</span>
             <span
@@ -226,13 +294,13 @@ export const ProviderRegisterModal: React.FC = () => {
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 max-w-md mx-auto text-xs text-emerald-900 text-left space-y-2">
                 <p className="font-bold flex items-center gap-1.5 text-emerald-800">
                   <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Photos d'identité et de profil enregistrées avec succès</span>
+                  <span>Selfie de face & Pièce capturés avec succès au téléphone</span>
                 </p>
                 <p>
-                  Votre <strong>période d'essai gratuit de 3 mois</strong> a débuté. Votre catalogue d'activités est désormais en ligne pour recevoir vos premières demandes de devis.
+                  Votre <strong>période d'essai gratuit de 3 mois</strong> a débuté. Votre profil et votre catalogue sont publiés.
                 </p>
                 <p className="text-[11px] text-slate-600 pt-1 border-t border-emerald-200/60">
-                  À la fin des 3 mois, l'accès se renouvellera automatiquement à 2 000 FCFA/mois via les liens Wave, Orange Money ou MTN.
+                  À la fin des 3 mois, l'Intelligence Artificielle SENTINEL-PAY activera automatiquement votre compte en temps réel dès le clic sur le lien Wave, Orange Money ou MTN.
                 </p>
               </div>
 
@@ -250,16 +318,16 @@ export const ProviderRegisterModal: React.FC = () => {
             </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* STEP 1: Strict Identity Verification with Photos */}
+              {/* STEP 1: Direct Camera Selfie & Identity Card Capture */}
               {step === 1 && (
                 <div className="space-y-4 animate-in fade-in">
                   <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 flex items-start gap-3">
                     <Lock className="w-5 h-5 text-amber-700 shrink-0 mt-0.5" />
                     <div className="text-xs text-amber-950">
                       <strong className="block mb-1">
-                        Authentification obligatoire par photo (Sécurité ON CONNAÎT 🇨🇮) :
+                        Prise de vue directe au téléphone (Sécurité renforcée) :
                       </strong>
-                      Prenez ou téléversez la <strong>photo de votre pièce d'identité</strong> (CNI, Permis ou Passeport) ainsi que votre <strong>photo de face (créateur)</strong>. Aucun numéro d'entreprise n'est demandé.
+                      Prenez directement en photo votre <strong>pièce d'identité</strong> et prenez votre <strong>selfie de face</strong> avec votre smartphone. Aucun numéro d'entreprise n'est exigé.
                     </div>
                   </div>
 
@@ -294,7 +362,7 @@ export const ProviderRegisterModal: React.FC = () => {
 
                     <div className="sm:col-span-2">
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Type de pièce d'identité fournie *
+                        Type de pièce d'identité que vous allez photographier *
                       </label>
                       <div className="grid grid-cols-3 gap-2">
                         {(['CNI', 'Permis', 'Passeport'] as const).map((type) => (
@@ -316,98 +384,70 @@ export const ProviderRegisterModal: React.FC = () => {
                       </div>
                     </div>
 
-                    {/* Photo 1: ID Document Photo */}
-                    <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    {/* PHOTO 1: PHOTO DE LA PIÈCE DIRECTEMENT AU TÉLÉPHONE */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-300 space-y-3">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                          <Camera className="w-4 h-4 text-emerald-600" />
+                        <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
+                          <Smartphone className="w-4 h-4 text-emerald-600" />
                           <span>Photo de la pièce ({pieceIdentiteType}) *</span>
                         </label>
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                          Obligatoire
+                          {pieceIdentiteUrl ? 'Photo prête ✅' : 'À prendre'}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={pieceIdentiteUrl}
-                          alt="Aperçu pièce d'identité"
-                          className="w-16 h-12 rounded-lg object-cover border border-slate-300 shadow-xs shrink-0"
-                        />
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            placeholder="URL de la photo ou lien sécurisé"
-                            value={pieceIdentiteUrl}
-                            onChange={(e) => setPieceIdentiteUrl(e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-[11px] font-semibold bg-white border border-slate-200 rounded-lg focus:outline-none"
+                      {pieceIdentiteUrl && (
+                        <div className="relative aspect-16/10 rounded-xl overflow-hidden bg-slate-900 border border-slate-300 shadow-xs">
+                          <img
+                            src={pieceIdentiteUrl}
+                            alt="Pièce capturée"
+                            className="w-full h-full object-cover"
                           />
-                          <p className="text-[10px] text-slate-500 mt-1">
-                            Photo recto bien lisible sans reflet.
-                          </p>
                         </div>
-                      </div>
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => openCamera('id')}
+                        className="w-full py-2.5 px-3 bg-emerald-700 hover:bg-emerald-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4" />
+                        <span>{pieceIdentiteUrl ? 'Reprendre la photo de ma pièce 📸' : 'Photographier ma pièce avec le téléphone 📸'}</span>
+                      </button>
                     </div>
 
-                    {/* Photo 2: Creator Face Photo (Selfie / Face photo) */}
-                    <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
+                    {/* PHOTO 2: SELFIE DE FACE DIRECTEMENT AU TÉLÉPHONE */}
+                    <div className="p-4 bg-slate-50 rounded-2xl border-2 border-dashed border-emerald-300 space-y-3">
                       <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                        <label className="text-xs font-black text-slate-900 flex items-center gap-1.5">
                           <User className="w-4 h-4 text-emerald-600" />
-                          <span>Photo de face du créateur *</span>
+                          <span>Selfie de face du créateur / gérant *</span>
                         </label>
                         <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                          Obligatoire
+                          {photoCreateurUrl ? 'Selfie prêt ✅' : 'À prendre'}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={photoCreateurUrl}
-                          alt="Aperçu visage créateur"
-                          className="w-12 h-12 rounded-full object-cover border border-emerald-400 shadow-xs shrink-0"
-                        />
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            placeholder="URL ou lien de votre photo de face"
-                            value={photoCreateurUrl}
-                            onChange={(e) => setPhotoCreateurUrl(e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-[11px] font-semibold bg-white border border-slate-200 rounded-lg focus:outline-none"
-                          />
-                          <p className="text-[10px] text-slate-500 mt-1">
-                            Photo de face claire du gérant pour certification.
-                          </p>
+                      {photoCreateurUrl && (
+                        <div className="flex items-center justify-center py-1">
+                          <div className="relative w-24 h-24 rounded-full overflow-hidden border-3 border-emerald-500 shadow-md bg-slate-900">
+                            <img
+                              src={photoCreateurUrl}
+                              alt="Selfie créateur"
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      )}
 
-                    {/* Photo 3: Profile Photo for Vitrine */}
-                    <div className="sm:col-span-2 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                          <ImageIcon className="w-4 h-4 text-teal-600" />
-                          <span>Photo de profil public / Logo de l'activité *</span>
-                        </label>
-                        <span className="text-[10px] text-slate-500">Visible par les clients</span>
-                      </div>
-
-                      <div className="flex items-center gap-3">
-                        <img
-                          src={photoProfil}
-                          alt="Aperçu profil public"
-                          className="w-12 h-12 rounded-xl object-cover border border-slate-300 shadow-xs shrink-0"
-                        />
-                        <div className="flex-1">
-                          <input
-                            type="text"
-                            placeholder="URL de la photo de profil public"
-                            value={photoProfil}
-                            onChange={(e) => setPhotoProfil(e.target.value)}
-                            className="w-full px-2.5 py-1.5 text-[11px] font-semibold bg-white border border-slate-200 rounded-lg focus:outline-none"
-                          />
-                        </div>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => openCamera('creator')}
+                        className="w-full py-2.5 px-3 bg-slate-900 hover:bg-slate-800 text-white font-extrabold text-xs rounded-xl flex items-center justify-center gap-2 shadow-xs transition-colors cursor-pointer"
+                      >
+                        <Camera className="w-4 h-4 text-emerald-400" />
+                        <span>{photoCreateurUrl ? 'Reprendre mon selfie de face 🤳' : 'Prendre mon Selfie de face en direct 🤳'}</span>
+                      </button>
                     </div>
 
                     <div className="sm:col-span-2">
@@ -430,7 +470,7 @@ export const ProviderRegisterModal: React.FC = () => {
                       type="button"
                       onClick={() => {
                         if (!nomCivil || !prenoms || !telephone || !pieceIdentiteUrl || !photoCreateurUrl) {
-                          alert('Veuillez renseigner votre nom, prénoms, téléphone ainsi que les photos de pièce d\'identité et de face.');
+                          alert('Veuillez renseigner votre nom, prénoms, téléphone ainsi que la photo de pièce et votre selfie de face.');
                           return;
                         }
                         setStep(2);
@@ -562,16 +602,21 @@ export const ProviderRegisterModal: React.FC = () => {
                       />
                     </div>
 
-                    {/* Catalogue d'activités : Première photo de réalisation */}
+                    {/* Catalogue d'activités : Photo de réalisation */}
                     <div className="sm:col-span-2 p-4 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl border border-emerald-200 space-y-3">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5 font-black text-xs text-emerald-900">
                           <ImageIcon className="w-4 h-4 text-emerald-700" />
-                          <span>Première réalisation de votre Catalogue d'Activités *</span>
+                          <span>Première réalisation de votre Catalogue d'Activités</span>
                         </div>
-                        <span className="text-[10px] bg-emerald-200/80 text-emerald-950 font-bold px-2 py-0.5 rounded-full">
-                          Visible sur votre vitrine
-                        </span>
+                        <button
+                          type="button"
+                          onClick={() => openCamera('activity')}
+                          className="px-3 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs rounded-lg flex items-center gap-1 cursor-pointer"
+                        >
+                          <Camera className="w-3.5 h-3.5" />
+                          <span>Prendre en photo 📸</span>
+                        </button>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -590,29 +635,30 @@ export const ProviderRegisterModal: React.FC = () => {
 
                         <div>
                           <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                            Photo de l'activité (URL)
+                            Courte description
                           </label>
                           <input
                             type="text"
-                            value={initialActivityPhoto}
-                            onChange={(e) => setInitialActivityPhoto(e.target.value)}
-                            className="w-full px-3 py-2 text-xs font-semibold bg-white border border-slate-200 rounded-xl"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-2">
-                          <label className="block text-[11px] font-bold text-slate-700 mb-1">
-                            Courte description de ce que vous avez accompli
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="Ex: Couverture photo complète de la dot et du mariage à Cocody."
+                            placeholder="Ex: Couverture photo complète pour nos clients à Cocody."
                             value={initialActivityDesc}
                             onChange={(e) => setInitialActivityDesc(e.target.value)}
                             className="w-full px-3 py-2 text-xs font-semibold bg-white border border-slate-200 rounded-xl"
                           />
                         </div>
                       </div>
+
+                      {initialActivityPhoto && (
+                        <div className="flex items-center gap-3 pt-1">
+                          <img
+                            src={initialActivityPhoto}
+                            alt="Aperçu catalogue"
+                            className="w-16 h-12 rounded-lg object-cover border border-slate-300 shadow-xs shrink-0"
+                          />
+                          <span className="text-[11px] text-emerald-800 font-bold">
+                            Photo enregistrée pour votre vitrine
+                          </span>
+                        </div>
+                      )}
                     </div>
                   </div>
 
@@ -733,7 +779,7 @@ export const ProviderRegisterModal: React.FC = () => {
                   <div className="bg-gradient-to-r from-emerald-500/15 via-teal-500/10 to-amber-500/15 p-4 rounded-2xl border border-emerald-200 flex items-start gap-3">
                     <Sparkles className="w-5 h-5 text-emerald-700 shrink-0 mt-0.5" />
                     <div className="text-xs text-emerald-950">
-                      <strong>Offre Officielle de Lancement :</strong> Vous bénéficiez de <strong>3 mois d'essai gratuit</strong>. Dès la fin des 3 mois, l'accès mensuel est fixé à <strong>2 000 FCFA / mois</strong> avec activation automatique en temps réel via lien direct Wave, Orange Money ou MTN.
+                      <strong>Activation Automatique par IA :</strong> Vous bénéficiez de <strong>3 mois d'essai gratuit</strong>. Dès la fin des 3 mois, l'Intelligence Artificielle SENTINEL-PAY activera automatiquement votre compte en temps réel dès règlement de 2 000 FCFA via les liens Wave, Orange Money ou MTN.
                     </div>
                   </div>
 
@@ -758,6 +804,16 @@ export const ProviderRegisterModal: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* Direct Phone Camera & Selfie Capture Modal */}
+      <CameraCaptureModal
+        isOpen={cameraModal.isOpen}
+        onClose={() => setCameraModal((prev) => ({ ...prev, isOpen: false }))}
+        mode={cameraModal.mode}
+        title={cameraModal.title}
+        subtitle={cameraModal.subtitle}
+        onCapture={handleCaptureResult}
+      />
     </div>
   );
 };
