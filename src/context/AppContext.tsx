@@ -10,9 +10,11 @@ import {
   ActivityCatalogItem,
   SecurityAuditLog,
   AdminProfile,
+  BannedPhoneRecord,
 } from '../types';
 import { INITIAL_EVENTS, INITIAL_PROVIDERS } from '../data/mockData';
 import { TRANSLATIONS } from '../utils/translations';
+import { normalizePhoneNumber } from '../utils/aiIdentityInspector';
 
 interface AppContextType {
   language: Language;
@@ -29,6 +31,12 @@ interface AppContextType {
   adminProfile: AdminProfile;
   auditLogs: SecurityAuditLog[];
   addSecurityAuditLog: (type: SecurityAuditLog['type'], message: string, severity?: SecurityAuditLog['severity'], targetId?: string) => void;
+
+  // Phone Blacklist Anti-Fraude
+  bannedPhones: BannedPhoneRecord[];
+  isPhoneBanned: (phone: string) => boolean;
+  banPhoneByAi: (phone: string, nomTente: string, motif: string, aiNotes?: string) => void;
+  unbanPhone: (id: string) => void;
 
   // Active Provider Selection
   currentProviderId: string;
@@ -270,6 +278,76 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const saved = localStorage.getItem('onconnait_fav_providers');
     return saved ? JSON.parse(saved) : ['prov-1'];
   });
+
+  // Banned Phone Numbers (Irrevocable AI Anti-Fraud Blacklist)
+  const [bannedPhones, setBannedPhones] = useState<BannedPhoneRecord[]>(() => {
+    const saved = localStorage.getItem('onconnait_banned_phones');
+    return saved
+      ? JSON.parse(saved)
+      : [
+          {
+            id: 'ban-init-1',
+            telephone: '+225 00 00 00 00 00',
+            normalizedPhone: '2250000000000',
+            nomTente: 'Faux Profil Testeur',
+            dateBannissement: '2026-09-15',
+            motif: 'Numéro fictif et fausses pièces détectées par l\'IA SENTINEL-CI',
+            aiDetectionNotes: 'Tentative d\'inscription avec CNI factice et numéro non attribué.',
+          },
+        ];
+  });
+
+  useEffect(() => {
+    localStorage.setItem('onconnait_banned_phones', JSON.stringify(bannedPhones));
+  }, [bannedPhones]);
+
+  const isPhoneBanned = (phone: string): boolean => {
+    if (!phone) return false;
+    const normalized = normalizePhoneNumber(phone);
+    if (!normalized) return false;
+    return bannedPhones.some(
+      (b) => b.normalizedPhone === normalized || b.telephone.replace(/[^0-9]/g, '') === normalized
+    );
+  };
+
+  const banPhoneByAi = (
+    phone: string,
+    nomTente: string,
+    motif: string,
+    aiNotes: string = 'Détection de fraude automatisée par le Robot SENTINEL-CI'
+  ) => {
+    const normalized = normalizePhoneNumber(phone);
+    const newRecord: BannedPhoneRecord = {
+      id: `ban-${Date.now()}`,
+      telephone: phone,
+      normalizedPhone: normalized,
+      nomTente: nomTente || 'Inconnu',
+      dateBannissement: new Date().toISOString().split('T')[0],
+      motif,
+      aiDetectionNotes: aiNotes,
+    };
+
+    setBannedPhones((prev) => [newRecord, ...prev]);
+    addSecurityAuditLog(
+      'PHONE_BLACKLIST',
+      `🚨 BANNISSEMENT DÉFINITIF DU NUMÉRO ${phone} (Tentative : ${nomTente}) pour motif : ${motif}`,
+      'alert',
+      newRecord.id
+    );
+  };
+
+  const unbanPhone = (id: string) => {
+    const record = bannedPhones.find((b) => b.id === id);
+    setBannedPhones((prev) => prev.filter((b) => b.id !== id));
+    if (record) {
+      addSecurityAuditLog(
+        'SECURITY_SCAN',
+        `Levée de bannissement par l'administrateur Ulrich pour le numéro ${record.telephone}`,
+        'warning',
+        id
+      );
+    }
+  };
 
   // Modal targets
   const [selectedEvent, setSelectedEvent] = useState<EventItem | null>(null);
@@ -678,6 +756,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         adminProfile,
         auditLogs,
         addSecurityAuditLog,
+        bannedPhones,
+        isPhoneBanned,
+        banPhoneByAi,
+        unbanPhone,
         currentProviderId,
         setCurrentProviderId,
         events,

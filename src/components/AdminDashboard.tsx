@@ -29,6 +29,8 @@ import {
   LogOut,
   Smartphone,
   KeyRound,
+  Ban,
+  Phone,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -53,6 +55,8 @@ export const AdminDashboard: React.FC = () => {
     confirmPaymentByAdmin,
     setSelectedEvent,
     setSelectedProvider,
+    bannedPhones,
+    unbanPhone,
   } = useApp();
 
   // Authentication Lock State (Exclusive to Ulrich, his Robot & AI)
@@ -682,6 +686,74 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+          </div>
+
+          {/* LISTE NOIRE DES NUMÉROS BANNIS À VIE PAR LE ROBOT SENTINEL-CI */}
+          <div className="bg-white rounded-3xl border border-rose-200 shadow-2xs overflow-hidden">
+            <div className="p-5 sm:p-6 bg-gradient-to-r from-rose-900 via-rose-950 to-slate-950 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <div className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-rose-600 text-white text-[11px] font-black mb-1">
+                  <Ban className="w-3.5 h-3.5" />
+                  <span>SÉCURITÉ INVIOLABLE • LISTE NOIRE DÉFINITIVE</span>
+                </div>
+                <h3 className="text-base font-black">
+                  Numéros de Téléphone Bannis à Vie ({bannedPhones.length})
+                </h3>
+                <p className="text-xs text-rose-200 mt-0.5">
+                  Ces numéros ont été définitivement bloqués par l'IA SENTINEL-CI suite à des tentatives avec fausses informations.
+                </p>
+              </div>
+
+              <span className="text-xs font-bold text-rose-300 bg-white/10 px-3 py-1 rounded-xl border border-rose-500/30">
+                Blocage Irrévocable Actif 🛡️
+              </span>
+            </div>
+
+            {bannedPhones.length === 0 ? (
+              <div className="p-8 text-center text-xs text-slate-400">
+                Aucun numéro actuellement sur liste noire.
+              </div>
+            ) : (
+              <div className="divide-y divide-slate-100">
+                {bannedPhones.map((b) => (
+                  <div key={b.id} className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-rose-50/40 transition-colors">
+                    <div className="flex items-start gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 mt-0.5">
+                        <Phone className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-black text-rose-950">{b.telephone}</span>
+                          <span className="text-[10px] font-bold bg-rose-100 text-rose-800 px-2 py-0.5 rounded-md">
+                            Banni à vie 🚫
+                          </span>
+                        </div>
+                        <div className="text-xs text-slate-600 mt-0.5">
+                          Tentative au nom de : <strong>{b.nomTente}</strong> • Date : {b.dateBannissement}
+                        </div>
+                        <p className="text-xs text-rose-700 font-medium mt-1">
+                          « {b.motif} »
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <button
+                        onClick={() => {
+                          if (confirm(`Super-Administrateur Ulrich, confirmez-vous la levée du bannissement pour le numéro ${b.telephone} ?`)) {
+                            unbanPhone(b.id);
+                          }
+                        }}
+                        className="px-3.5 py-1.5 bg-slate-100 hover:bg-rose-100 text-slate-700 hover:text-rose-800 font-bold text-xs rounded-xl border border-slate-200 transition-colors cursor-pointer"
+                        title="Seul Ulrich peut lever un bannissement"
+                      >
+                        Lever le bannissement (Ulrich 👑)
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

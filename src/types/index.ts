@@ -130,7 +130,7 @@ export interface ActivityCatalogItem {
 export interface SecurityAuditLog {
   id: string;
   timestamp: string;
-  type: 'PROVIDER_REGISTRATION' | 'ID_VERIFICATION' | 'TRIAL_EXPIRY' | 'PAYMENT_ACTIVATION' | 'SECURITY_SCAN' | 'SUSPICIOUS_REPORT' | 'ADMIN_LOGIN' | 'AI_ID_INSPECTION';
+  type: 'PROVIDER_REGISTRATION' | 'ID_VERIFICATION' | 'TRIAL_EXPIRY' | 'PAYMENT_ACTIVATION' | 'SECURITY_SCAN' | 'SUSPICIOUS_REPORT' | 'ADMIN_LOGIN' | 'AI_ID_INSPECTION' | 'PHONE_BLACKLIST';
   severity: 'info' | 'warning' | 'alert' | 'success';
   message: string;
   targetId?: string;
@@ -239,3 +239,14 @@ export interface SubscriptionPayment {
   datePaiement: string;
   statut: 'valide' | 'en_attente' | 'rejete';
 }
+
+export interface BannedPhoneRecord {
+  id: string;
+  telephone: string;
+  normalizedPhone: string;
+  nomTente: string;
+  dateBannissement: string;
+  motif: string;
+  aiDetectionNotes: string;
+}
+
